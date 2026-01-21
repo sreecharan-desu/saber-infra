@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  candidate
+  recruiter
+  admin
+}
+
+enum SwipeDirection {
+  left
+  right
+}
+
+model User {
+  id              String   @id @default(uuid())
+  role            UserRole @default(candidate)
+  name            String
+  email           String   @unique
+  photo_url       String?
+  intent_text     String?
+  why_text        String?
+  constraints_json Json?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  oauth_accounts  OAuthAccount[]
+  skills          Skill[]
+  swipes          Swipe[]  @relation("SwipesAsActor")
+  swipes_received Swipe[]  @relation("SwipesAsTarget")
+  matches         Match[]
+  sent_messages   Message[]
+  recommendation_profile RecommendationProfile?
+  
+  // Implicit relation to companies managed by this recruiter
+  companies       Company[]
+}
+
+model OAuthAccount {
+  id                String   @id @default(uuid())
+  user_id           String
+  provider          String
+  provider_user_id  String
+  raw_data_json     Json
+  user              User     @relation(fields: [user_id], references: [id])
+
+  @@unique([provider, provider_user_id])
+}
+
+model Skill {
+  id                String   @id @default(uuid())
+  user_id           String
+  name              String
+  source            String
+  confidence_score  Float
+  user              User     @relation(fields: [user_id], references: [id])
+}
+
+model Company {
+  id          String   @id @default(uuid())
+  name        String
+  website     String?
+  verified    Boolean  @default(false)
+  created_at  DateTime @default(now())
+  
+  // Link to recruiter who owns/manages this company profile
+  recruiter_id String
+  recruiter    User   @relation(fields: [recruiter_id], references: [id])
+
+  jobs        Job[]
+}
+
+model Job {
+  id                String   @id @default(uuid())
+  company_id        String
+  problem_statement String
+  expectations      String
+  non_negotiables   String
+  deal_breakers     String
+  skills_required   String[]
+  constraints_json  Json
+  active            Boolean  @default(true)
+  created_at        DateTime @default(now())
+
+  company           Company  @relation(fields: [company_id], references: [id])
+  swipes            Swipe[]
+  matches           Match[]
+}
+
+model Swipe {
+  id          String         @id @default(uuid())
+  user_id     String
+  job_id      String
+  direction   SwipeDirection
+  created_at  DateTime       @default(now())
+
+  user        User           @relation("SwipesAsActor", fields: [user_id], references: [id])
+  job         Job            @relation(fields: [job_id], references: [id])
+  
+  // For recruiter swipes: target is the candidate. For candidate swipes: null.
+  target_user_id String?
+  target_user    User?          @relation("SwipesAsTarget", fields: [target_user_id], references: [id])
+
+  @@unique([user_id, job_id, target_user_id])
+}
+
+model Match {
+  id                  String   @id @default(uuid())
+  candidate_id        String
+  job_id              String
+  reveal_status       Boolean  @default(false)
+  explainability_json Json
+  created_at          DateTime @default(now())
+
+  candidate           User     @relation(fields: [candidate_id], references: [id])
+  job                 Job      @relation(fields: [job_id], references: [id])
+  messages            Message[]
+}
+
+model Message {
+  id          String   @id @default(uuid())
+  match_id    String
+  sender_id   String
+  content     String
+  created_at  DateTime @default(now())
+
+  match       Match    @relation(fields: [match_id], references: [id])
+  sender      User     @relation(fields: [sender_id], references: [id])
+}
+
+model RecommendationProfile {
+  user_id               String   @id
+  positive_signals_json Json
+  negative_signals_json Json
+  suppression_rules_json Json
+  last_updated          DateTime @default(now())
+
+  user                  User     @relation(fields: [user_id], references: [id])
+}
