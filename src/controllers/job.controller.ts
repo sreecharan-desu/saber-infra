@@ -10,7 +10,7 @@ const swipeSchema = z.object({
 
 export const getFeed = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = req.user!.id; // Candidate
+    const userId = (req.user as any)?.id; // Candidate
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: { skills: true, recommendation_profile: true },
@@ -84,7 +84,7 @@ export const getFeed = async (req: Request, res: Response, next: NextFunction) =
 export const swipe = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { job_id, direction } = swipeSchema.parse(req.body);
-    const userId = req.user!.id;
+    const userId = (req.user as any)?.id;
 
     // Daily Limit Check
     if (direction === 'right') {
@@ -122,7 +122,7 @@ export const swipe = async (req: Request, res: Response, next: NextFunction) => 
             job_id,
             target_user_id: userId,
             direction: 'right',
-          },
+          } as any,
         });
 
         if (reciprocalSwipe) {
@@ -137,10 +137,10 @@ export const swipe = async (req: Request, res: Response, next: NextFunction) => 
 
           const match = await tx.match.create({
             data: {
-              candidate_id: userId,
+              candidate_id: userId as string,
               job_id,
               reveal_status: true,
-              explainability_json: explainability,
+              explainability_json: explainability as any,
             },
           });
           

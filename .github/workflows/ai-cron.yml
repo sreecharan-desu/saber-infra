@@ -9,17 +9,10 @@ jobs:
   run-ai:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger AI Logic
+      - name: Run AI Recommendation Engine
         run: |
-          curl -X POST "${{ secrets.BASE_URL }}/ai/recommendations/update" \
-            -H "X-API-KEY: ${{ secrets.AI_INTERNAL_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "user_id": "system",
-              "positive_signals": {},
-              "negative_signals": {},
-              "suppression_rules": {}
-            }'
-          # Note: In a real scenario, this would run a script that fetches data from /ai/data/*,
-          # processes it, and then POSTs back results. 
-          # For this MVP, we show the trigger point is ready.
+          # Placeholder for real AI recommendation script
+          # The AI team will provide the logic to fetch data from /ai/data/*
+          # process it, and post results to /ai/recommendations/update
+          echo "AI Recommendation Cycle Triggered"
+

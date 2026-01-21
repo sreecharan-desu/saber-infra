@@ -39,7 +39,7 @@ export const createCompany = async (req: Request, res: Response, next: NextFunct
 export const createJob = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const data = jobSchema.parse(req.body);
-        const recruiterId = req.user!.id;
+        const recruiterId = (req.user as any)?.id;
 
         // Verify ownership of company
         const company = await prisma.company.findUnique({ where: { id: data.company_id } });

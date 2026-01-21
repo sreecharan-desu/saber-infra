@@ -15,7 +15,7 @@ export const updateIntent = async (req: Request, res: Response, next: NextFuncti
   try {
     const { intent_text, why_text } = intentSchema.parse(req.body);
     const user = await prisma.user.update({
-      where: { id: req.user?.id },
+      where: { id: (req.user as any)?.id },
       data: { intent_text, why_text },
     });
     res.json(user);
@@ -28,7 +28,7 @@ export const updateConstraints = async (req: Request, res: Response, next: NextF
   try {
     const { constraints_json } = constraintsSchema.parse(req.body);
     const user = await prisma.user.update({
-      where: { id: req.user?.id },
+      where: { id: (req.user as any)?.id },
       data: { constraints_json: constraints_json as any },
     });
     res.json(user);

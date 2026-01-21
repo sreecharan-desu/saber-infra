@@ -9,7 +9,7 @@ const messageSchema = z.object({
 
 export const getMatches = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = req.user!.id;
+    const userId = (req.user as any)?.id;
     const matches = await prisma.match.findMany({
       where: {
         OR: [
@@ -44,7 +44,7 @@ export const getMatches = async (req: Request, res: Response, next: NextFunction
 export const sendMessage = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { match_id, content } = messageSchema.parse(req.body);
-        const userId = req.user!.id;
+        const userId = (req.user as any)?.id;
 
         // Verify participation
         const match = await prisma.match.findUnique({

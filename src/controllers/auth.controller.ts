@@ -61,7 +61,7 @@ export const linkProvider = async (req: Request, res: Response, next: NextFuncti
           throw new Error('Invalid provider');
     }
 
-    await userService.linkOAuthCloudAccount(req.user?.id as string, profile);
+    await userService.linkOAuthCloudAccount((req.user as any)?.id, profile);
     
     // Return updated user?
     res.json({ status: 'ok', message: 'Provider linked successfully' });
