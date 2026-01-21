@@ -1,0 +1,93 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  justify-content: center;
+}
+
+.card {
+  padding: 2rem;
+  border-radius: 1rem;
+  background: #1a1a1a;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  width: 100%;
+  max-width: 500px;
+}
+
+.login-box {
+  background: #242424;
+}
+
+.google-btn {
+  background: #4285f4;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 4px;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.google-btn:hover {
+  background: #357abd;
+}
+
+.manual-entry {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #333;
+  text-align: left;
+}
+
+.manual-entry input {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background: #333;
+  color: white;
+}
+
+.token-box pre {
+  background: #111;
+  padding: 10px;
+  border-radius: 4px;
+  overflow-x: auto;
+  text-align: left;
+  font-size: 12px;
+}
+
+.error-message {
+  color: #ff6b6b;
+  margin-top: 20px;
+  padding: 10px;
+  background: rgba(255, 107, 107, 0.1);
+  border-radius: 4px;
+}
+
+.hint {
+  font-size: 12px;
+  color: #888;
+}
+
+.logout-btn {
+  background: #ff4757;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 20px;
+}
