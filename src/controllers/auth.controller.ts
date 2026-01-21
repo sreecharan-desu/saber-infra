@@ -22,7 +22,7 @@ export const handleOAuthCallbackGET = async (req: Request, res: Response, next: 
     // or the frontend uses a specific redirect_uri that the backend respects.
     
     // For now, to demonstrate the "Exact Flow":
-    return res.redirect(`http://localhost:5174?code=${code}`);
+    return res.redirect(`http://localhost:5173?code=${code}`);
     
     /* 
     // OLD HTML RESPONSE
