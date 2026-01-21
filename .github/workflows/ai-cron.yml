@@ -1,0 +1,25 @@
+name: AI Recommendation Cron
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # Every 6 hours
+  workflow_dispatch:
+
+jobs:
+  run-ai:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger AI Logic
+        run: |
+          curl -X POST "${{ secrets.BASE_URL }}/ai/recommendations/update" \
+            -H "X-API-KEY: ${{ secrets.AI_INTERNAL_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "user_id": "system",
+              "positive_signals": {},
+              "negative_signals": {},
+              "suppression_rules": {}
+            }'
+          # Note: In a real scenario, this would run a script that fetches data from /ai/data/*,
+          # processes it, and then POSTs back results. 
+          # For this MVP, we show the trigger point is ready.

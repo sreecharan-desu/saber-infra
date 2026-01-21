@@ -7,7 +7,10 @@ interface TokenResponse {
 
 // Helper to get env vars safely
 const getEnv = (key: string) => {
-  const val = process.env[key];
+  let val = process.env[key];
+  if (!val && key.startsWith('GITHUB_')) {
+     val = process.env[`SABER_${key}`];
+  }
   if (!val) throw new Error(`Missing env var: ${key}`);
   return val;
 };
