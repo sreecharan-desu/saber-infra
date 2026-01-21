@@ -17,19 +17,10 @@ export const handleOAuthCallbackGET = async (req: Request, res: Response, next: 
   try {
     const { code, state } = req.query;
     
-    // TEMPORARY: Redirect to local React app for testing
-    // In production, this logic should check state or config to decide where to redirect
-    // or the frontend uses a specific redirect_uri that the backend respects.
+  
+    return res.redirect(`${config.frontendUrl}?code=${code}`);
     
-    // For now, to demonstrate the "Exact Flow":
-    return res.redirect(`http://localhost:5173?code=${code}`);
-    
-    /* 
-    // OLD HTML RESPONSE
-    res.send(`
-      <html>...</html>
-    `);
-    */
+  
   } catch (error) {
     next(error);
   }

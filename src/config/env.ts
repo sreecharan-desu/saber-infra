@@ -10,7 +10,8 @@ const requiredEnv = [
   'GITHUB_CLIENT_SECRET',
   'LINKEDIN_CLIENT_ID',
   'LINKEDIN_CLIENT_SECRET',
-  'BASE_URL'
+  'BASE_URL',
+  'FRONTEND_URL'
 ];
 
 export const validateEnv = () => {
@@ -24,6 +25,7 @@ export const validateEnv = () => {
 export const config = {
   port: process.env.PORT || 3000,
   baseUrl: process.env.BASE_URL || 'http://localhost:3000',
+  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
   jwtSecret: process.env.JWT_SECRET as string,
   google: {
     clientId: process.env.GOOGLE_CLIENT_ID as string,
