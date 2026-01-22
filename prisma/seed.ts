@@ -11,6 +11,72 @@ function getRandomSkills(count: number = 5) {
   return faker.helpers.arrayElements(TECH_STACKS, count);
 }
 
+const JOB_TEMPLATES = [
+  {
+    problem_statement: "We are scaling our real-time notification system to handle 1M+ concurrent users. The current polling architecture is inefficient.",
+    expectations: "Design and implement a scalable WebSocket-based microservice. Optimize message delivery guarantees and reduce latency.",
+    non_negotiables: "Experience with high-concurrency systems and WebSocket.",
+    deal_breakers: "No experience with asynchronous event-driven architectures.",
+    skills: ['Node.js', 'Redis', 'TypeScript', 'Docker']
+  },
+  {
+    problem_statement: "Our React frontend is experiencing performance bottlenecks on mobile devices due to large bundle sizes.",
+    expectations: "Refactor the core application to use Next.js. Implement code splitting, lazy loading, and optimize components.",
+    non_negotiables: "Deep understanding of React rendering cycle and performance optimization.",
+    deal_breakers: "Unfamiliarity with server-side rendering concepts.",
+    skills: ['React', 'Next.js', 'TypeScript']
+  },
+  {
+    problem_statement: "We need to migrate our monolithic backend to a microservices architecture on Kubernetes.",
+    expectations: "Containerize existing services, define Kubernetes manifests, and set up a CI/CD pipeline.",
+    non_negotiables: "Production experience with Kubernetes and Docker.",
+    deal_breakers: "Lack of experience with cloud-native infrastructure.",
+    skills: ['Python', 'Docker', 'Kubernetes', 'AWS']
+  },
+  {
+    problem_statement: "Processing terabytes of data daily for real-time analytics is becoming a bottleneck.",
+    expectations: "Build a robust data pipeline using Go and optimize database queries on PostgreSQL.",
+    non_negotiables: "Strong background in distributed systems and SQL optimization.",
+    deal_breakers: "No experience with typed languages like Go or Rust.",
+    skills: ['Go', 'PostgreSQL', 'AWS']
+  },
+  {
+    problem_statement: "We are launching a cross-platform mobile app for our fintech product.",
+    expectations: "Develop a secure, high-performance mobile app using Flutter. Integrate with REST APIs.",
+    non_negotiables: "Experience with mobile security best practices.",
+    deal_breakers: "Only native development experience without framework knowledge.",
+    skills: ['Flutter', 'Android', 'iOS']
+  }
+];
+
+const CANDIDATE_TEMPLATES = [
+  {
+    intent: "I am looking for a Senior Backend role where I can architect scalable distributed systems.",
+    why: "I thrive in solving complex concurrency problems and optimizing system performance.",
+    tech: ['Go', 'Rust', 'Kubernetes', 'AWS', 'PostgreSQL']
+  },
+  {
+    intent: "Seeking a Full Stack Engineer position with a focus on React and Node.js.",
+    why: "I value clean code and developer experience. I am passionate about building products users love.",
+    tech: ['React', 'Node.js', 'TypeScript', 'Next.js', 'GraphQL']
+  },
+  {
+    intent: "I am a DevOps Engineer looking to help teams automate their infrastructure.",
+    why: "I believe in 'Infrastructure as Code' and want to eliminate manual toil.",
+    tech: ['Docker', 'Kubernetes', 'Terraform', 'Ansible', 'AWS']
+  },
+  {
+    intent: "Aspiring Mobile Developer looking for opportunities in the fintech space.",
+    why: "I am fascinated by the challenge of making secure financial tools accessible on mobile devices.",
+    tech: ['Flutter', 'React Native', 'Swift', 'Kotlin']
+  },
+  {
+    intent: "Data Engineer interested in building real-time processing pipelines.",
+    why: "I enjoy turning raw data into actionable insights.",
+    tech: ['Python', 'Django', 'PostgreSQL', 'MongoDB', 'Redis']
+  }
+];
+
 async function main() {
   console.log('🌱 Starting seed...');
 
@@ -61,16 +127,16 @@ async function main() {
   for (const company of companies) {
     // 10 jobs per company
     for (let i = 0; i < 10; i++) {
-        const skills = getRandomSkills(faker.number.int({ min: 3, max: 6 }));
+        const template = faker.helpers.arrayElement(JOB_TEMPLATES);
         
         const job = await prisma.job.create({
             data: {
                 company_id: company.id,
-                problem_statement: faker.lorem.paragraph(),
-                expectations: faker.lorem.paragraph(), // "We expect you to..."
-                non_negotiables: faker.lorem.sentence(), // "Must be located in..."
-                deal_breakers: faker.lorem.sentence(), // "No remote work..."
-                skills_required: skills,
+                problem_statement: template.problem_statement,
+                expectations: template.expectations, 
+                non_negotiables: template.non_negotiables,
+                deal_breakers: template.deal_breakers,
+                skills_required: template.skills,
                 constraints_json: {
                   salary_range: [faker.number.int({ min: 60000, max: 90000 }), faker.number.int({ min: 100000, max: 180000 })],
                   experience_years: faker.number.int({ min: 1, max: 10 }),
@@ -88,7 +154,8 @@ async function main() {
   // 4. Create Candidates (100) & Skills
   const candidates = [];
   for (let i = 0; i < 100; i++) {
-    const skillsList = getRandomSkills(faker.number.int({ min: 3, max: 8 }));
+    const template = faker.helpers.arrayElement(CANDIDATE_TEMPLATES);
+    const skillsList = template.tech;
     
     // Create candidate
     const candidate = await prisma.user.create({
@@ -97,8 +164,8 @@ async function main() {
         name: faker.person.fullName(),
         email: faker.internet.email(),
         photo_url: faker.image.avatar(),
-        intent_text: faker.lorem.sentence(), // "Looking for a challenging role in..."
-        why_text: faker.lorem.sentence(), // "I am passionate about..."
+        intent_text: template.intent,
+        why_text: template.why,
         constraints_json: {
           preferred_salary: faker.number.int({ min: 70000, max: 150000 }),
           preferred_locations: [faker.location.city(), faker.location.city()],
