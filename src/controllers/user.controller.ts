@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import prisma from '../config/prisma';
 import { z } from 'zod';
+import * as userService from '../services/user.service';
 
 const intentSchema = z.object({
   intent_text: z.string(),
@@ -20,8 +21,9 @@ export const updateIntent = async (req: Request, res: Response, next: NextFuncti
     const user = await prisma.user.update({
       where: { id: (req.user as any)?.id },
       data: { intent_text, why_text },
+      include: { oauth_accounts: true }
     });
-    res.json(user);
+    res.json(userService.enrichUserWithOnboarding(user));
   } catch (err) {
     next(err);
   }
@@ -33,8 +35,9 @@ export const updateConstraints = async (req: Request, res: Response, next: NextF
     const user = await prisma.user.update({
       where: { id: (req.user as any)?.id },
       data: { constraints_json: constraints_json as any },
+      include: { oauth_accounts: true }
     });
-    res.json(user);
+    res.json(userService.enrichUserWithOnboarding(user));
   } catch (err) {
     next(err);
   }
@@ -46,8 +49,9 @@ export const updateRole = async (req: Request, res: Response, next: NextFunction
     const user = await prisma.user.update({
       where: { id: (req.user as any)?.id },
       data: { role },
+      include: { oauth_accounts: true }
     });
-    res.json(user);
+    res.json(userService.enrichUserWithOnboarding(user));
   } catch (err) {
     next(err);
   }

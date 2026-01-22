@@ -4,7 +4,7 @@ import { authenticateJWT } from '../middleware/auth.middleware';
 
 const router = Router();
 
-router.get('/matches', authenticateJWT, matchController.getMatches);
+router.get('/', authenticateJWT, matchController.getMatches);
 router.post('/messages', authenticateJWT, matchController.sendMessage);
 
 export default router;

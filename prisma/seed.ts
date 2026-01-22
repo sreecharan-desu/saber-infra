@@ -93,172 +93,172 @@ async function main() {
 
   console.log('🧹 Cleaned existing data');
 
-  // 2. Create Recruiters (5) & Companies (5)
-  const recruiters = [];
-  const companies = [];
+//   // 2. Create Recruiters (5) & Companies (5)
+//   const recruiters = [];
+//   const companies = [];
 
-  for (let i = 0; i < 5; i++) {
-    const recruiter = await prisma.user.create({
-      data: {
-        role: UserRole.recruiter,
-        name: faker.person.fullName(),
-        email: faker.internet.email(),
-        photo_url: faker.image.avatar(),
-        created_at: faker.date.past()
-      }
-    });
-    recruiters.push(recruiter);
+//   for (let i = 0; i < 5; i++) {
+//     const recruiter = await prisma.user.create({
+//       data: {
+//         role: UserRole.recruiter,
+//         name: faker.person.fullName(),
+//         email: faker.internet.email(),
+//         photo_url: faker.image.avatar(),
+//         created_at: faker.date.past()
+//       }
+//     });
+//     recruiters.push(recruiter);
 
-    const company = await prisma.company.create({
-      data: {
-        name: faker.company.name(),
-        website: faker.internet.url(),
-        verified: faker.datatype.boolean(0.8), // 80% verified
-        recruiter_id: recruiter.id,
-        created_at: faker.date.past()
-      }
-    });
-    companies.push(company);
-  }
-  console.log(`✅ Created ${recruiters.length} recruiters and companies`);
+//     const company = await prisma.company.create({
+//       data: {
+//         name: faker.company.name(),
+//         website: faker.internet.url(),
+//         verified: faker.datatype.boolean(0.8), // 80% verified
+//         recruiter_id: recruiter.id,
+//         created_at: faker.date.past()
+//       }
+//     });
+//     companies.push(company);
+//   }
+//   console.log(`✅ Created ${recruiters.length} recruiters and companies`);
 
-  // 3. Create Jobs (50)
-  const jobs = [];
-  for (const company of companies) {
-    // 10 jobs per company
-    for (let i = 0; i < 10; i++) {
-        const template = faker.helpers.arrayElement(JOB_TEMPLATES);
+//   // 3. Create Jobs (50)
+//   const jobs = [];
+//   for (const company of companies) {
+//     // 10 jobs per company
+//     for (let i = 0; i < 10; i++) {
+//         const template = faker.helpers.arrayElement(JOB_TEMPLATES);
         
-        const job = await prisma.job.create({
-            data: {
-                company_id: company.id,
-                problem_statement: template.problem_statement,
-                expectations: template.expectations, 
-                non_negotiables: template.non_negotiables,
-                deal_breakers: template.deal_breakers,
-                skills_required: template.skills,
-                constraints_json: {
-                  salary_range: [faker.number.int({ min: 60000, max: 90000 }), faker.number.int({ min: 100000, max: 180000 })],
-                  experience_years: faker.number.int({ min: 1, max: 10 }),
-                  location: faker.location.city()
-                },
-                active: true,
-                created_at: faker.date.recent({ days: 60 })
-            }
-        });
-        jobs.push(job);
-    }
-  }
-  console.log(`✅ Created ${jobs.length} jobs`);
+//         const job = await prisma.job.create({
+//             data: {
+//                 company_id: company.id,
+//                 problem_statement: template.problem_statement,
+//                 expectations: template.expectations, 
+//                 non_negotiables: template.non_negotiables,
+//                 deal_breakers: template.deal_breakers,
+//                 skills_required: template.skills,
+//                 constraints_json: {
+//                   salary_range: [faker.number.int({ min: 60000, max: 90000 }), faker.number.int({ min: 100000, max: 180000 })],
+//                   experience_years: faker.number.int({ min: 1, max: 10 }),
+//                   location: faker.location.city()
+//                 },
+//                 active: true,
+//                 created_at: faker.date.recent({ days: 60 })
+//             }
+//         });
+//         jobs.push(job);
+//     }
+//   }
+//   console.log(`✅ Created ${jobs.length} jobs`);
 
-  // 4. Create Candidates (100) & Skills
-  const candidates = [];
-  for (let i = 0; i < 100; i++) {
-    const template = faker.helpers.arrayElement(CANDIDATE_TEMPLATES);
-    const skillsList = template.tech;
+//   // 4. Create Candidates (100) & Skills
+//   const candidates = [];
+//   for (let i = 0; i < 100; i++) {
+//     const template = faker.helpers.arrayElement(CANDIDATE_TEMPLATES);
+//     const skillsList = template.tech;
     
-    // Create candidate
-    const candidate = await prisma.user.create({
-      data: {
-        role: UserRole.candidate,
-        name: faker.person.fullName(),
-        email: faker.internet.email(),
-        photo_url: faker.image.avatar(),
-        intent_text: template.intent,
-        why_text: template.why,
-        constraints_json: {
-          preferred_salary: faker.number.int({ min: 70000, max: 150000 }),
-          preferred_locations: [faker.location.city(), faker.location.city()],
-          remote_only: faker.datatype.boolean()
-        },
-        created_at: faker.date.past(),
-        skills: {
-            create: skillsList.map(s => ({
-                name: s,
-                source: 'manual', // or 'linkedin', 'github'
-                confidence_score: faker.number.float({ min: 0.5, max: 1.0 })
-            }))
-        }
-      }
-    });
+//     // Create candidate
+//     const candidate = await prisma.user.create({
+//       data: {
+//         role: UserRole.candidate,
+//         name: faker.person.fullName(),
+//         email: faker.internet.email(),
+//         photo_url: faker.image.avatar(),
+//         intent_text: template.intent,
+//         why_text: template.why,
+//         constraints_json: {
+//           preferred_salary: faker.number.int({ min: 70000, max: 150000 }),
+//           preferred_locations: [faker.location.city(), faker.location.city()],
+//           remote_only: faker.datatype.boolean()
+//         },
+//         created_at: faker.date.past(),
+//         skills: {
+//             create: skillsList.map(s => ({
+//                 name: s,
+//                 source: 'manual', // or 'linkedin', 'github'
+//                 confidence_score: faker.number.float({ min: 0.5, max: 1.0 })
+//             }))
+//         }
+//       }
+//     });
 
-    // Create Recommendation Profile for AI
-    await prisma.recommendationProfile.create({
-        data: {
-            user_id: candidate.id,
-            positive_signals_json: {
-                viewed_jobs: faker.helpers.arrayElements(jobs.map(j => j.id), 3),
-                liked_skills: faker.helpers.arrayElements(TECH_STACKS, 2)
-            },
-            negative_signals_json: {
-                disliked_companies: []
-            },
-            suppression_rules_json: {}
-        }
-    });
+//     // Create Recommendation Profile for AI
+//     await prisma.recommendationProfile.create({
+//         data: {
+//             user_id: candidate.id,
+//             positive_signals_json: {
+//                 viewed_jobs: faker.helpers.arrayElements(jobs.map(j => j.id), 3),
+//                 liked_skills: faker.helpers.arrayElements(TECH_STACKS, 2)
+//             },
+//             negative_signals_json: {
+//                 disliked_companies: []
+//             },
+//             suppression_rules_json: {}
+//         }
+//     });
 
-    candidates.push(candidate);
-  }
-  console.log(`✅ Created ${candidates.length} candidates`);
+//     candidates.push(candidate);
+//   }
+//   console.log(`✅ Created ${candidates.length} candidates`);
 
-  // 5. Create Swipes (Random interactions) - ~500
-  // Each candidate swipes on some jobs
-  let swipeCount = 0;
-  for (const candidate of candidates) {
-      // Swipe on random 10 jobs
-      const randomJobs = faker.helpers.arrayElements(jobs, faker.number.int({ min: 5, max: 15 }));
+//   // 5. Create Swipes (Random interactions) - ~500
+//   // Each candidate swipes on some jobs
+//   let swipeCount = 0;
+//   for (const candidate of candidates) {
+//       // Swipe on random 10 jobs
+//       const randomJobs = faker.helpers.arrayElements(jobs, faker.number.int({ min: 5, max: 15 }));
       
-      for (const job of randomJobs) {
-          await prisma.swipe.create({
-              data: {
-                  user_id: candidate.id,
-                  job_id: job.id,
-                  direction: faker.helpers.arrayElement([SwipeDirection.left, SwipeDirection.right]),
-                  created_at: faker.date.recent({ days: 30 })
-              }
-          });
-          swipeCount++;
-      }
-  }
-  console.log(`✅ Created ${swipeCount} swipes`);
+//       for (const job of randomJobs) {
+//           await prisma.swipe.create({
+//               data: {
+//                   user_id: candidate.id,
+//                   job_id: job.id,
+//                   direction: faker.helpers.arrayElement([SwipeDirection.left, SwipeDirection.right]),
+//                   created_at: faker.date.recent({ days: 30 })
+//               }
+//           });
+//           swipeCount++;
+//       }
+//   }
+//   console.log(`✅ Created ${swipeCount} swipes`);
 
-  // 6. Create Matches (Explicit matches) - ~30
-  // Pick random candidate-job pairs and make them matches
-  let matchCount = 0;
-  for (let i = 0; i < 30; i++) {
-     const candidate = faker.helpers.arrayElement(candidates);
-     const job = faker.helpers.arrayElement(jobs);
+//   // 6. Create Matches (Explicit matches) - ~30
+//   // Pick random candidate-job pairs and make them matches
+//   let matchCount = 0;
+//   for (let i = 0; i < 30; i++) {
+//      const candidate = faker.helpers.arrayElement(candidates);
+//      const job = faker.helpers.arrayElement(jobs);
      
-     // Check if match already exists (crudely, just ignore error or be careful)
-     // To avoid unique constraint error, we can just try/catch or simple check
-     // Actually, simpler to just rely on unique constraints and `skipDuplicates` if prisma supported it easily here, 
-     // but prisma mock doesn't. 
-     // Let's just do a check or ensure uniqueness by set logic if needed.
-     // For this simple seed, randomized repeats are rare enough or we can catch.
+//      // Check if match already exists (crudely, just ignore error or be careful)
+//      // To avoid unique constraint error, we can just try/catch or simple check
+//      // Actually, simpler to just rely on unique constraints and `skipDuplicates` if prisma supported it easily here, 
+//      // but prisma mock doesn't. 
+//      // Let's just do a check or ensure uniqueness by set logic if needed.
+//      // For this simple seed, randomized repeats are rare enough or we can catch.
      
-     const exists = await prisma.match.findFirst({
-         where: { candidate_id: candidate.id, job_id: job.id }
-     });
+//      const exists = await prisma.match.findFirst({
+//          where: { candidate_id: candidate.id, job_id: job.id }
+//      });
      
-     if (!exists) {
-         await prisma.match.create({
-             data: {
-                 candidate_id: candidate.id,
-                 job_id: job.id,
-                 reveal_status: faker.datatype.boolean(),
-                 explainability_json: {
-                     reason: "Strong skill overlap",
-                     score: faker.number.float({ min: 0.8, max: 0.99 })
-                 },
-                 created_at: faker.date.recent({ days: 10 })
-             }
-         });
-         matchCount++;
-     }
-  }
-  console.log(`✅ Created ${matchCount} matches`);
+//      if (!exists) {
+//          await prisma.match.create({
+//              data: {
+//                  candidate_id: candidate.id,
+//                  job_id: job.id,
+//                  reveal_status: faker.datatype.boolean(),
+//                  explainability_json: {
+//                      reason: "Strong skill overlap",
+//                      score: faker.number.float({ min: 0.8, max: 0.99 })
+//                  },
+//                  created_at: faker.date.recent({ days: 10 })
+//              }
+//          });
+//          matchCount++;
+//      }
+//   }
+//   console.log(`✅ Created ${matchCount} matches`);
 
-  console.log('✨ Seed completed successfully');
+//   console.log('✨ Seed completed successfully');
 }
 
 main()

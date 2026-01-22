@@ -13,7 +13,7 @@ router.use('/auth', authRoutes);
 router.use('/user', userRoutes); // /me, /intent, /constraints
 router.use('/jobs', jobRoutes); // /jobs/feed, /swipe
 router.use('/matches', matchRoutes); // matches, messages
-router.use('/recruiters', recruiterRoutes); // /company, /job
+router.use('/', recruiterRoutes); // /company, /job, /recruiter/*
 router.use('/admin', adminRoutes);
 router.use('/ai', aiRoutes);
 

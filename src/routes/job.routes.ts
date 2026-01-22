@@ -5,7 +5,7 @@ import { swipeLimiter } from '../middleware/rateLimit.middleware';
 
 const router = Router();
 
-router.get('/jobs/feed', authenticateJWT, requireRole(['candidate']), jobController.getFeed);
+router.get('/feed', authenticateJWT, requireRole(['candidate']), jobController.getFeed);
 router.post('/swipe', authenticateJWT, requireRole(['candidate']), swipeLimiter, jobController.swipe);
 
 export default router;

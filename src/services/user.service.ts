@@ -117,3 +117,16 @@ export const linkOAuthCloudAccount = async (userId: string, profile: OAuthProfil
     },
   });
 };
+
+export const enrichUserWithOnboarding = (user: any) => {
+  if (!user) return user;
+  
+  const accounts = user.oauth_accounts || [];
+  const hasGithub = accounts.some((acc: any) => acc.provider === 'github');
+  const hasLinkedin = accounts.some((acc: any) => acc.provider === 'linkedin');
+  
+  // onboarding is true if either GitHub or LinkedIn is missing
+  const onboarding = !hasGithub || !hasLinkedin;
+  
+  return { ...user, onboarding };
+};
