@@ -10,7 +10,7 @@ import aiRoutes from './ai.routes';
 const router = Router();
 
 router.use('/auth', authRoutes);
-router.use('/', userRoutes); // /me, /intent, /constraints
+router.use('/user', userRoutes); // /me, /intent, /constraints
 router.use('/', jobRoutes); // /jobs/feed, /swipe
 router.use('/', matchRoutes); // matches, messages
 router.use('/', recruiterRoutes); // /company, /job
