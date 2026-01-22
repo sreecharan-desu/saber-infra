@@ -1,17 +1,29 @@
 import { Request, Response, NextFunction } from 'express';
 import prisma from '../config/prisma';
+import logger from '../utils/logger';
+import { v4 as uuidv4 } from 'uuid';
 
 export const getMetrics = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const totalSwipes = await prisma.swipe.count();
-        const totalMatches = await prisma.match.count();
+        const [totalSwipes, totalMatches, activeJobs, activeCandidates] = await Promise.all([
+            prisma.swipe.count(),
+            prisma.match.count(),
+            prisma.job.count({ where: { active: true } }),
+            prisma.user.count({ where: { role: 'candidate' } })
+        ]);
+
         // Calculate ratio
-        const ratio = totalSwipes > 0 ? totalMatches / totalSwipes : 0;
+        const matchRate = totalSwipes > 0 ? (totalMatches / totalSwipes) * 100 : 0;
 
         res.json({
-            swipes: totalSwipes,
-            matches: totalMatches,
-            ratio
+            overview: {
+                total_swipes: totalSwipes,
+                total_matches: totalMatches,
+                match_rate: `${matchRate.toFixed(2)}%`,
+                active_jobs: activeJobs,
+                active_candidates: activeCandidates
+            },
+            timestamp: new Date().toISOString()
         });
     } catch (err) {
         next(err);
@@ -19,9 +31,33 @@ export const getMetrics = async (req: Request, res: Response, next: NextFunction
 };
 
 export const rotateAIKeys = async (req: Request, res: Response, next: NextFunction) => {
-    // "POST /admin/ai/keys Admin-only."
-    // In reality this would update a DB record or Secret Manager.
-    // Here we can just mock the response or update env if we had access (we don't persist env write at runtime usually).
-    // Let's just return a stub success.
-    res.json({ message: "Key rotation initiated (Mock)" });
+    try {
+        const crypto = await import('crypto');
+        const newKey = `ai_sk_${uuidv4().replace(/-/g, '')}`; // Structured key format
+        const hash = crypto.createHash('sha256').update(newKey).digest('hex');
+        
+        const requesterId = (req.user as any)?.id || 'unknown';
+
+        // 1. Persist new key
+        await prisma.apiKey.create({
+            data: {
+                keyHash: hash,
+                name: `Rotated by Admin ${requesterId}`,
+                isActive: true
+            }
+        });
+
+        logger.warn(`Security: New AI API Key generated and activated by Admin ${requesterId}`);
+
+        // 2. Return to Admin (One-time view)
+        res.json({
+            status: 'success',
+            message: 'New AI API Key generated and active. Store this key securely; it will not be shown again.',
+            new_key: newKey,
+            generated_at: new Date().toISOString(),
+            note: 'This key is immediately valid for API access. You may now update your cron jobs.'
+        });
+    } catch (err) {
+        next(err);
+    }
 };

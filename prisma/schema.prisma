@@ -161,3 +161,13 @@ model RecommendationProfile {
 
   user                  User     @relation(fields: [user_id], references: [id])
 }
+
+model ApiKey {
+  id        String   @id @default(uuid())
+  keyHash   String   @unique
+  name      String?
+  isActive  Boolean  @default(true)
+  lastUsed  DateTime?
+  createdAt DateTime @default(now())
+  revokedAt DateTime?
+}
