@@ -11,9 +11,9 @@ const router = Router();
 
 router.use('/auth', authRoutes);
 router.use('/user', userRoutes); // /me, /intent, /constraints
-router.use('/', jobRoutes); // /jobs/feed, /swipe
-router.use('/', matchRoutes); // matches, messages
-router.use('/', recruiterRoutes); // /company, /job
+router.use('/jobs', jobRoutes); // /jobs/feed, /swipe
+router.use('/matches', matchRoutes); // matches, messages
+router.use('/recruiters', recruiterRoutes); // /company, /job
 router.use('/admin', adminRoutes);
 router.use('/ai', aiRoutes);
 
