@@ -4,6 +4,7 @@ import * as oauthProviders from '../services/oauth.providers';
 import * as userService from '../services/user.service';
 import * as githubDataService from '../services/github.data.service';
 import { generateToken } from '../utils/jwt';
+import prisma from '../config/prisma';
 
 import { config } from '../config/env';
 
@@ -48,6 +49,12 @@ export const handleOAuthCallback = async (req: Request, res: Response, next: Nex
 
     const user = await userService.findOrCreateUserConfirmingIdentity(profile);
     
+    // Check for hardcoded admin email - THIS IS A SIMPLE OVERRIDE
+    if (user.email === 'admin@saber.so' && user.role !== 'admin') {
+       await prisma.user.update({ where: { id: user.id }, data: { role: 'admin' } });
+       user.role = 'admin';
+    }
+
     // Trigger GitHub data extraction in background if available
     if (provider === 'github' && profile.accessToken) {
       githubDataService.extractAndStoreGithubData(user.id, profile.accessToken);

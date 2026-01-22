@@ -10,6 +10,10 @@ const intentSchema = z.object({
 // Accept constraints directly in the body, not nested
 const constraintsSchema = z.record(z.string(), z.any());
 
+const roleSchema = z.object({
+  role: z.enum(['candidate', 'recruiter']),
+});
+
 export const updateIntent = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { intent_text, why_text } = intentSchema.parse(req.body);
@@ -29,6 +33,19 @@ export const updateConstraints = async (req: Request, res: Response, next: NextF
     const user = await prisma.user.update({
       where: { id: (req.user as any)?.id },
       data: { constraints_json: constraints_json as any },
+    });
+    res.json(user);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateRole = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { role } = roleSchema.parse(req.body);
+    const user = await prisma.user.update({
+      where: { id: (req.user as any)?.id },
+      data: { role },
     });
     res.json(user);
   } catch (err) {
