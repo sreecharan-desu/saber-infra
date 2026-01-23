@@ -13,6 +13,12 @@ enum UserRole {
   admin
 }
 
+enum SubscriptionTier {
+  free_tier
+  premium
+  pro
+}
+
 enum SwipeDirection {
   left
   right
@@ -28,6 +34,11 @@ model User {
   intent_text     String?
   why_text        String?
   constraints_json Json?
+  
+  subscription_tier SubscriptionTier @default(free_tier)
+  razorpay_customer_id String?
+  
+  payments        Payment[]
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
@@ -90,6 +101,8 @@ model Company {
 
   jobs        Job[]
 
+  updated_at  DateTime @updatedAt
+
   @@index([recruiter_id])
 }
 
@@ -110,6 +123,8 @@ model Job {
   matches           Match[]
   bookmarks         Bookmark[]
   applications      Application[]
+
+  updated_at        DateTime @updatedAt
 
   @@index([company_id])
   @@index([active, created_at]) // Optimized: Feed usually queries active jobs ordered by date
@@ -226,4 +241,20 @@ model Application {
   @@index([user_id])
   @@index([job_id, status]) // Optimized: Frequent filtering by job and status
   @@index([status])
+}
+
+model Payment {
+  id                  String   @id @default(uuid())
+  user_id             String
+  amount              Float
+  currency            String
+  status              String   // created, authorized, captured, failed
+  razorpay_order_id   String   @unique
+  razorpay_payment_id String?
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+
+  user                User     @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
 }
