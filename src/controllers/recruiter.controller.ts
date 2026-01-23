@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import prisma from '../config/prisma';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
+import { speedCache } from '../utils/cache';
 import * as userService from '../services/user.service';
 
 const companySchema = z.object({
@@ -100,57 +101,43 @@ export const createJob = async (req: Request, res: Response, next: NextFunction)
 };
 
 export const getRecruiterFeed = async (req: Request, res: Response, next: NextFunction) => {
-    // Show candidates who match my jobs
-    // "Recruiter feed shows: Candidate intent, Skills, Constraints"
-    // Does Recruiter Swipe? Yes. "A recruiter is ... swiping on a candidate’s intent summary"
-    
-    // Logic: Find Candidates who satisfy Job Constraints.
-    // For which Job? The recruiter might have multiple. 
-    // Ideally, pass ?job_id query param or show feed mixed? 
-    // Let's assume per-job feed or mixed. Simple: Recruiter selects a job to recruit for.
-    // Spec says: "Recruiter feed shows..." imply generic feed? Or maybe per job context.
-    // Let's require job_id param for clarity, or just fetch all relevant candidates for all active jobs.
-    
-    // Implementation: Candidates that are relevant to ANY of my active jobs and haven't been swiped yet.
+    try {
+        const userId = (req.user as any)?.id;
+        
+        // Parallelize fetching active jobs and existing swipes
+        const [myJobs, mySwipedCandidateIds] = await Promise.all([
+            prisma.job.findMany({
+                where: { company: { recruiter_id: userId }, active: true },
+                select: { id: true, constraints_json: true, skills_required: true }
+            }),
+            prisma.swipe.findMany({
+                where: { user_id: userId },
+                select: { target_user_id: true }
+            }).then(swipes => new Set(swipes.map(s => s.target_user_id)))
+        ]);
+        
+        if (myJobs.length === 0) return res.json({ candidates: [] });
+        
+        // DB-level filtering: Find candidates who haven't been swiped by this recruiter yet
+        // This is significantly faster than fetching all candidates and filtering in memory
+        const candidates = await prisma.user.findMany({
+            where: { 
+                role: 'candidate',
+                id: { notIn: Array.from(mySwipedCandidateIds).filter((id): id is string => id !== null) }
+            },
+            include: { skills: true },
+            take: 40 // Fetch a manageable batch for high-speed scoring
+        });
 
-   try {
-       const userId = (req.user as any)?.id;
-       
-       const myJobs = await prisma.job.findMany({
-           where: { company: { recruiter_id: userId }, active: true },
-           select: { id: true, constraints_json: true, skills_required: true }
-       });
-       
-       if (myJobs.length === 0) return res.json({ candidates: [] });
-       
-       const myJobIds = myJobs.map(j => j.id);
-
-       // Fetch candidates
-       const candidates = await prisma.user.findMany({
-           where: { role: 'candidate' },
-           include: { skills: true }
-       });
-
-       // Fetch my swipes to filter out
-       const mySwipes = await prisma.swipe.findMany({
-           where: { user_id: userId, job_id: { in: myJobIds } },
-           select: { job_id: true, target_user_id: true } as any
-       });
-       
-       const swipedKeys = new Set(mySwipes.map((s: any) => `${s.job_id}:${s.target_user_id}`));
-
-       const feed = [];
-       for (const candidate of candidates) {
+        const feed = [];
+        for (const candidate of candidates) {
             const userConstraints = (candidate.constraints_json as Record<string, any>) || {};
 
             for (const job of myJobs) {
-                 if (swipedKeys.has(`${job.id}:${candidate.id}`)) continue;
-
-                 // Hard Constraints Check: Job vs Candidate
+                 // The mismatch check remains fast for small constraint sets
                  const jobConstraints = (job.constraints_json as Record<string, any>) || {};
                  let mismatch = false;
                  
-                 // If seeker has constraint X, job must satisfy X.
                  for (const key in userConstraints) {
                      if (jobConstraints[key] !== undefined && jobConstraints[key] !== userConstraints[key]) {
                          mismatch = true;
@@ -165,18 +152,24 @@ export const getRecruiterFeed = async (req: Request, res: Response, next: NextFu
                      skills: candidate.skills,
                      relevant_job_id: job.id
                  });
+                 // Break after first relevant job to keep feed unique per candidate
+                 break; 
             }
-       }
-       
-       res.json({ candidates: feed.slice(0, 50) });
-   } catch(err) {
-       next(err);
-   }
+        }
+        
+        res.json({ candidates: feed });
+    } catch(err) {
+        next(err);
+    }
 };
 
 export const getSignalsOfInterest = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const recruiterId = (req.user as any)?.id;
+        const cacheKey = `signals_${recruiterId}`;
+        
+        const cachedSignals = speedCache.get(cacheKey);
+        if (cachedSignals) return res.json({ signals: cachedSignals, is_cached: true });
         
         // 1. Get my active jobs
         const myJobs = await prisma.job.findMany({
@@ -188,15 +181,11 @@ export const getSignalsOfInterest = async (req: Request, res: Response, next: Ne
         const myJobIds = myJobs.map(j => j.id);
 
         // 2. Find Candidates who swiped RIGHT on my jobs
-        // AND I haven't swiped on them yet (prevent duplicates/already processed)
-        // AND exclude those who are already matched.
-        
-        // First, get all swipes where I am the target and direction is right
+        // Use optimized query structure with only necessary fields
         const incomingSwipes = await prisma.swipe.findMany({
             where: { 
                 job_id: { in: myJobIds }, 
                 direction: 'right',
-                // Filter out candidates I already swiped on
                 user: {
                     swipes_received: {
                         none: {
@@ -208,11 +197,21 @@ export const getSignalsOfInterest = async (req: Request, res: Response, next: Ne
             },
             include: {
                 user: {
-                    include: { skills: true }
+                    select: {
+                        id: true,
+                        intent_text: true,
+                        skills: true
+                    }
                 },
-                job: true
+                job: {
+                    select: {
+                        id: true,
+                        problem_statement: true
+                    }
+                }
             },
-            orderBy: { created_at: 'desc' }
+            orderBy: { created_at: 'desc' },
+            take: 50
         });
 
         const signals = incomingSwipes.map(s => ({
@@ -225,7 +224,10 @@ export const getSignalsOfInterest = async (req: Request, res: Response, next: Ne
             received_at: s.created_at
         }));
 
-        res.json({ signals });
+        // Cache recruiter signals for 30 seconds to keep it snappy but fresh
+        speedCache.set(cacheKey, signals, 30000);
+
+        res.json({ signals, is_cached: false });
     } catch (err) {
         next(err);
     }

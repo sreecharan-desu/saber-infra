@@ -3,8 +3,17 @@ import prisma from '../config/prisma';
 import logger from '../utils/logger';
 import { randomUUID, createHash } from 'crypto';
 
+import { speedCache } from '../utils/cache';
+
 export const getMetrics = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        const cacheKey = 'admin_metrics_global';
+        const cachedData = speedCache.get(cacheKey);
+        
+        if (cachedData) {
+            return res.json(cachedData);
+        }
+
         const [totalSwipes, totalMatches, activeJobs, activeCandidates] = await Promise.all([
             prisma.swipe.count(),
             prisma.match.count(),
@@ -12,10 +21,8 @@ export const getMetrics = async (req: Request, res: Response, next: NextFunction
             prisma.user.count({ where: { role: 'candidate' } })
         ]);
 
-        // Calculate ratio
         const matchRate = totalSwipes > 0 ? (totalMatches / totalSwipes) * 100 : 0;
-
-        res.json({
+        const metrics = {
             overview: {
                 total_swipes: totalSwipes,
                 total_matches: totalMatches,
@@ -23,8 +30,14 @@ export const getMetrics = async (req: Request, res: Response, next: NextFunction
                 active_jobs: activeJobs,
                 active_candidates: activeCandidates
             },
-            timestamp: new Date().toISOString()
-        });
+            timestamp: new Date().toISOString(),
+            is_cached: false
+        };
+
+        // Cache for 5 minutes
+        speedCache.set(cacheKey, { ...metrics, is_cached: true }, 300000);
+
+        res.json(metrics);
     } catch (err) {
         next(err);
     }

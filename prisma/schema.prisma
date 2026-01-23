@@ -123,6 +123,8 @@ model Swipe {
   @@unique([user_id, job_id, target_user_id])
   @@index([job_id])
   @@index([target_user_id])
+  @@index([user_id, direction])
+  @@index([direction])
 }
 
 model Match {
