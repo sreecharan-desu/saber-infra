@@ -126,11 +126,23 @@ export const linkProvider = async (req: Request, res: Response, next: NextFuncti
   }
 };
 
+import { getCache, setCache } from '../utils/cache';
+
 export const getMe = async (req: Request, res: Response) => {
+  const userId = (req.user as any).id;
+  const cacheKey = `user_profile_${userId}`;
+
+  const cached = await getCache(cacheKey);
+  if (cached) return res.json(cached);
+
   // Re-fetch to ensure oauth_accounts and other links are fresh
   const user = await prisma.user.findUnique({
-    where: { id: (req.user as any).id },
+    where: { id: userId },
     include: { oauth_accounts: true }
   });
-  res.json(await userService.enrichUserWithOnboarding(user));
+  
+  const enriched = await userService.enrichUserWithOnboarding(user);
+  await setCache(cacheKey, enriched, 60);
+
+  res.json(enriched);
 };

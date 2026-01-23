@@ -176,9 +176,13 @@ export const createJob = async (req: Request, res: Response, next: NextFunction)
     }
 };
 
-export const getRecruiterFeed = async (req: Request, res: Response, next: NextFunction) => {
+    export const getRecruiterFeed = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const userId = (req.user as any)?.id;
+        const cacheKey = `recruiter_feed_${userId}`;
+
+        const cachedFeed = await getCache(cacheKey);
+        if (cachedFeed) return res.json({ candidates: cachedFeed });
         
         // Parallelize fetching active jobs and existing swipes
         const [myJobs, mySwipedCandidateIds] = await Promise.all([
@@ -233,6 +237,8 @@ export const getRecruiterFeed = async (req: Request, res: Response, next: NextFu
             }
         }
         
+        await setCache(cacheKey, feed, 60); // Cache feed for 60 seconds
+
         res.json({ candidates: feed });
     } catch(err) {
         next(err);
@@ -374,6 +380,8 @@ export const recruiterSwipe = async (req: Request, res: Response, next: NextFunc
         
         // Invalidate signals just in case
         await deleteCache(`signals_${userId}`);
+        // Invalidate feed to remove the swiped candidate
+        await deleteCache(`recruiter_feed_${userId}`);
 
         res.json({ success: true, is_mutual: matchCreated, match: matchDetails });
     } catch(err) {

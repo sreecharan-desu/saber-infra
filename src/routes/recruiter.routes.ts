@@ -15,7 +15,7 @@ router.get('/jobs', authenticateJWT, requireRole(['recruiter']), recruiterContro
 router.put('/job/:id', authenticateJWT, requireRole(['recruiter']), recruiterController.updateJob);
 router.delete('/job/:id', authenticateJWT, requireRole(['recruiter']), recruiterController.deleteJob);
 router.get('/signals', authenticateJWT, requireRole(['recruiter']), recruiterController.getSignalsOfInterest);
-router.get('/recruiter/feed', authenticateJWT, requireRole(['recruiter']), recruiterController.getRecruiterFeed); 
-router.post('/recruiter/swipe', authenticateJWT, requireRole(['recruiter']), swipeLimiter, recruiterController.recruiterSwipe); 
+router.get('/feed', authenticateJWT, requireRole(['recruiter']), recruiterController.getRecruiterFeed); 
+router.post('/swipe', authenticateJWT, requireRole(['recruiter']), swipeLimiter, recruiterController.recruiterSwipe); 
 
 export default router;

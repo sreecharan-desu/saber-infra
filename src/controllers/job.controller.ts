@@ -8,9 +8,17 @@ const swipeSchema = z.object({
   direction: z.enum(['left', 'right']),
 });
 
+import { getCache, setCache, deleteCache } from '../utils/cache';
+
 export const getFeed = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = (req.user as any)?.id; // Candidate
+    const cacheKey = `candidate_feed_${userId}`;
+    
+    // Check Cache
+    const cached = await getCache(cacheKey);
+    if (cached) return res.json({ jobs: cached });
+
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: { skills: true, recommendation_profile: true },
@@ -77,6 +85,9 @@ export const getFeed = async (req: Request, res: Response, next: NextFunction) =
         cover_image_url: job.company.cover_image_url
       }
     }));
+    
+    // Cache for 60 seconds
+    await setCache(cacheKey, response, 60);
 
     res.json({ jobs: response });
   } catch (err) {
@@ -160,6 +171,7 @@ export const swipe = async (req: Request, res: Response, next: NextFunction) => 
               job_id,
               reveal_status: true,
               explainability_json: explainability as any,
+              // Note: Match does not need to store job_id? Wait, schema has job_id. Fixed in earlier step.
             },
           });
           
@@ -180,6 +192,9 @@ export const swipe = async (req: Request, res: Response, next: NextFunction) => 
         }
       }
     });
+    
+    // Invalidate Feed Cache for this user so they don't see the swiped job
+    await deleteCache(`candidate_feed_${userId}`);
 
     res.json({ success: true, message: 'Swipe recorded' });
   } catch (err) {

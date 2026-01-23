@@ -1,97 +1,82 @@
-# 🔺 SABER - AI-Powered Technical Recruitment Platform
+# SABER - Intent-Based Job Matching Platform
 
-<div align="center">
+**SABER** is a privacy-preserving, intent-driven job matching platform that connects candidates with opportunities based on their true career aspirations, not just keywords. Built with a swipe-based interface, SABER enables mutual matching between candidates and recruiters while maintaining anonymity until both parties express interest.
 
-![SABER](https://img.shields.io/badge/SABER-v1.2.0-a855f7?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMkw0LjUgOUwxMiAxNkwxOS41IDlMMTIgMloiIGZpbGw9IiNhODU1ZjciLz48cGF0aCBkPSJNMTIgMjJMNC41IDE1TDEyIDhMMTkuNSAxNUwxMiAyMloiIGZpbGw9IiNhODU1ZjciIGZpbGwtb3BhY2l0eT0iMC4zIi8+PC9zdmc+)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-20-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Prisma](https://img.shields.io/badge/Prisma-6.0-2D3748?style=for-the-badge&logo=prisma&logoColor=white)](https://www.prisma.io/)
+## 🎯 Core Philosophy
 
-**Next-generation talent matching powered by AI signal analysis**
-
-[Features](#-features) • [Tech Stack](#-tech-stack) • [Quick Start](#-quick-start) • [Architecture](#-architecture) • [API](#-api-documentation)
-
-</div>
+- **Intent Over Keywords**: Match based on what candidates want to achieve, not just what they've done
+- **Privacy-First**: Identities remain hidden until mutual interest is confirmed
+- **Constraint-Driven**: Hard constraints (location, visa, salary) are enforced before matching
+- **Skill-Aware**: Leverages GitHub and LinkedIn data to extract and validate skills automatically
 
 ---
 
-## 🎯 Overview
+## 🏗️ Architecture Overview
 
-SABER is a **high-fidelity recruitment platform** that uses AI-driven signal analysis to match technical talent with organizational challenges. Unlike traditional job boards, SABER analyzes real-world technical contributions from GitHub and LinkedIn to create authentic skill profiles, enabling precise candidate-job matching.
+### Tech Stack
 
-### ✨ Key Differentiators
+**Backend:**
+- Node.js + Express + TypeScript
+- PostgreSQL (Neon) with Prisma ORM
+- Redis (Upstash) for caching
+- Cloudinary for image storage
+- OAuth 2.0 (Google, GitHub, LinkedIn)
 
-- 🧠 **AI Signal Extraction** - Automated skill profiling from GitHub repos and LinkedIn
-- ⚡ **100x Performance** - Intelligent caching with sub-millisecond response times
-- 🎨 **Premium UI** - State-of-the-art glassmorphism and micro-interactions
-- 🔒 **OAuth Security** - GitHub, Google, and LinkedIn authentication
-- 📧 **Automated Notifications** - Beautiful HTML email templates for matches
-- 🎯 **Smart Matching** - Bidirectional swipe-based discovery system
+**Frontend:**
+- React + TypeScript + Vite
+- TailwindCSS for styling
+- React Query (@tanstack/react-query) for state management
+- Framer Motion for animations
 
----
+**Infrastructure:**
+- Vercel (Backend & Frontend deployment)
+- GitHub Actions (CI/CD)
+- Upstash Redis (Caching layer)
+- Neon PostgreSQL (Database)
 
-## 🚀 Features
+### System Components
 
-### For Recruiters
-- **Discovery Feed** - AI-recommended candidates based on job requirements
-- **Signal Inbox** - Real-time notifications when candidates express interest
-- **Match Management** - Secure messaging with mutual-reveal system
-- **Analytics Dashboard** - Performance metrics and match rates
-- **Job Management** - Create and manage technical challenges
-
-### For Candidates
-- **Automated Profiling** - Skills extracted from GitHub and LinkedIn
-- **Smart Recommendations** - Jobs matched to your technical core
-- **Privacy-First** - Identity revealed only on mutual match
-- **Direct Communication** - Chat with recruiters post-match
-
-### Platform Features
-- **Intelligent Caching** - 85% reduction in API calls with 2-minute cache
-- **Request Deduplication** - Prevents duplicate simultaneous requests
-- **Real-time Updates** - Live match notifications
-- **Database Cleanup** - `npm run db:clean` for development resets
-- **Email Automation** - Nodemailer integration with custom templates
-
----
-
-## 🛠 Tech Stack
-
-### Backend
-- **Runtime**: Node.js 20+ with TypeScript
-- **Framework**: Express 5.x
-- **Database**: PostgreSQL (Neon)
-- **ORM**: Prisma 6.0
-- **Authentication**: Passport.js (OAuth 2.0)
-- **Email**: Nodemailer
-- **Validation**: Zod
-- **Security**: Helmet, CORS, Rate Limiting
-
-### Frontend (Admin Dashboard)
-- **Framework**: React 18 + TypeScript
-- **Routing**: React Router v6
-- **Styling**: TailwindCSS 4.0
-- **Animations**: Framer Motion
-- **State**: Context API with intelligent caching
-- **HTTP Client**: Axios
-- **Icons**: Lucide React
-
-### Infrastructure
-- **Hosting**: Vercel (Frontend + Serverless Functions)
-- **Database**: Neon PostgreSQL
-- **Version Control**: Git + GitHub
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     SABER Platform                          │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌──────────────┐         ┌──────────────┐                │
+│  │   Candidate  │         │   Recruiter  │                │
+│  │   Frontend   │         │   Dashboard  │                │
+│  └──────┬───────┘         └──────┬───────┘                │
+│         │                        │                         │
+│         └────────┬───────────────┘                         │
+│                  │                                         │
+│         ┌────────▼─────────┐                              │
+│         │   API Gateway    │                              │
+│         │   (Express.js)   │                              │
+│         └────────┬─────────┘                              │
+│                  │                                         │
+│    ┌─────────────┼─────────────┐                         │
+│    │             │             │                         │
+│ ┌──▼───┐    ┌───▼────┐   ┌───▼────┐                    │
+│ │Redis │    │Postgres│   │Cloudinary│                   │
+│ │Cache │    │  (Neon)│   │ Images  │                    │
+│ └──────┘    └────────┘   └────────┘                    │
+│                                                             │
+│  ┌──────────────────────────────────────────┐            │
+│  │  OAuth Providers: Google, GitHub, LinkedIn│            │
+│  └──────────────────────────────────────────┘            │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 🏃 Quick Start
+## 🚀 Getting Started
 
 ### Prerequisites
-```bash
-node >= 20.0.0
-npm >= 10.0.0
-postgresql >= 14.0
-```
+
+- Node.js 18+ and npm
+- PostgreSQL database (or Neon account)
+- Redis instance (or Upstash account)
+- Cloudinary account
+- OAuth credentials (Google, GitHub, LinkedIn)
 
 ### Installation
 
@@ -103,63 +88,21 @@ cd SABER
 
 2. **Install dependencies**
 ```bash
-# Backend
 npm install
-
-# Frontend
-cd saber-admin-dashboard
-npm install
-cd ..
 ```
 
-3. **Environment Setup**
-```bash
-# Copy example env files
-cp .env.example .env
+3. **Set up environment variables**
 
-# Configure your environment variables (see Configuration section)
-```
-
-4. **Database Setup**
-```bash
-# Generate Prisma client
-npx prisma generate
-
-# Run migrations
-npx prisma migrate deploy
-
-# (Optional) Seed database
-npx prisma db seed
-```
-
-5. **Start Development Servers**
-```bash
-# Terminal 1: Backend
-npm run dev
-
-# Terminal 2: Frontend
-cd saber-admin-dashboard
-npm run dev
-```
-
-🎉 **Access the application:**
-- Frontend: `http://localhost:5173`
-- Backend API: `http://localhost:3000`
-
----
-
-## ⚙️ Configuration
-
-### Backend Environment Variables (.env)
+Create a `.env` file in the root directory:
 
 ```env
 # Database
 DATABASE_URL="postgresql://user:password@host:5432/database?sslmode=require"
 
 # JWT
-JWT_SECRET="your-super-secret-jwt-key-min-32-chars"
+JWT_SECRET="your-super-secret-jwt-key"
 
-# URLs
+# Server URLs
 BASE_URL="http://localhost:3000"
 FRONTEND_URL="http://localhost:5173"
 
@@ -175,19 +118,36 @@ GITHUB_CLIENT_SECRET="your-github-client-secret"
 LINKEDIN_CLIENT_ID="your-linkedin-client-id"
 LINKEDIN_CLIENT_SECRET="your-linkedin-client-secret"
 
-# AI/Admin
-AI_INTERNAL_API_KEY="your-internal-api-key"
+# AI Internal Key (for cron jobs)
+AI_INTERNAL_API_KEY="your-ai-api-key"
 
-# Email (Nodemailer)
+# Email (Gmail SMTP)
 EMAIL_USER="your-email@gmail.com"
-EMAIL_PASS="your-app-password"
+EMAIL_PASS="your-app-specific-password"
+
+# Redis
+REDIS_URL="rediss://default:password@host:6379"
+
+# Swipe Limit
+SWIPE_LIMIT=100
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME="your-cloud-name"
+CLOUDINARY_API_KEY="your-api-key"
+CLOUDINARY_API_SECRET="your-api-secret"
 ```
 
-### Frontend Environment Variables (saber-admin-dashboard/.env)
-
-```env
-VITE_API_URL="http://localhost:3000"
+4. **Initialize the database**
+```bash
+npx prisma db push
 ```
+
+5. **Run the development server**
+```bash
+npm run dev
+```
+
+The API will be available at `http://localhost:3000`
 
 ---
 
@@ -195,290 +155,369 @@ VITE_API_URL="http://localhost:3000"
 
 ```
 SABER/
-├── src/
-│   ├── config/          # Database, passport, logger config
-│   ├── controllers/     # Route handlers
-│   ├── middleware/      # Auth, error handling
-│   ├── routes/          # API route definitions
-│   ├── services/        # Business logic & external APIs
-│   ├── utils/           # Helper functions & cache
-│   └── server.ts        # Express app entry point
 ├── prisma/
-│   ├── schema.prisma    # Database schema
-│   └── seed.ts          # Database seeding
+│   ├── schema.prisma          # Database schema
+│   └── migrations/            # Migration history
+├── src/
+│   ├── config/                # Configuration files
+│   │   ├── cloudinary.ts
+│   │   ├── env.ts
+│   │   ├── prisma.ts
+│   │   └── redis.ts
+│   ├── controllers/           # Route handlers
+│   │   ├── admin.controller.ts
+│   │   ├── ai.controller.ts
+│   │   ├── auth.controller.ts
+│   │   ├── candidate.controller.ts
+│   │   ├── job.controller.ts
+│   │   ├── match.controller.ts
+│   │   ├── recruiter.controller.ts
+│   │   └── user.controller.ts
+│   ├── middleware/            # Express middleware
+│   │   ├── auth.middleware.ts
+│   │   ├── rateLimit.middleware.ts
+│   │   └── upload.middleware.ts
+│   ├── routes/                # API routes
+│   │   ├── admin.routes.ts
+│   │   ├── ai.routes.ts
+│   │   ├── auth.routes.ts
+│   │   ├── candidate.routes.ts
+│   │   ├── job.routes.ts
+│   │   ├── match.routes.ts
+│   │   ├── recruiter.routes.ts
+│   │   ├── user.routes.ts
+│   │   └── index.ts
+│   ├── services/              # Business logic
+│   │   ├── email.service.ts
+│   │   ├── github.data.service.ts
+│   │   ├── linkedin.data.service.ts
+│   │   ├── oauth.providers.ts
+│   │   └── user.service.ts
+│   ├── utils/                 # Utilities
+│   │   ├── cache.ts
+│   │   ├── jwt.ts
+│   │   └── logger.ts
+│   ├── app.ts                 # Express app setup
+│   └── server.ts              # Server entry point
 ├── scripts/
-│   └── db-clean.ts      # Database cleanup utility
-├── saber-admin-dashboard/
-│   ├── src/
-│   │   ├── components/  # React components
-│   │   ├── context/     # Global state management
-│   │   ├── pages/       # Route pages
-│   │   ├── lib/         # Utilities & API client
-│   │   └── types/       # TypeScript definitions
-│   └── public/          # Static assets
-└── package.json
+│   └── benchmark.ts           # Performance testing
+├── .env                       # Environment variables
+├── package.json
+├── tsconfig.json
+└── vercel.json               # Vercel deployment config
 ```
 
 ---
 
-## 🏗 Architecture
+## 🔐 Authentication Flow
 
-### High-Level Overview
+1. **User initiates OAuth** (Google/GitHub/LinkedIn)
+2. **Backend receives callback** with authorization code
+3. **Backend exchanges code** for access token
+4. **Profile data extracted** from OAuth provider
+5. **User created/linked** in database
+6. **JWT token generated** and returned to frontend
+7. **Background jobs** extract skills from GitHub/LinkedIn
 
-```
-┌─────────────────┐      ┌──────────────────┐      ┌─────────────────┐
-│  React Admin    │◄────►│  Express API     │◄────►│  PostgreSQL     │
-│  Dashboard      │      │  (REST + OAuth)  │      │  (Neon)         │
-└─────────────────┘      └──────────────────┘      └─────────────────┘
-        │                         │
-        │                         ▼
-        │                ┌──────────────────┐
-        │                │  External APIs   │
-        │                │  - GitHub        │
-        │                │  - LinkedIn      │
-        │                │  - Nodemailer    │
-        │                └──────────────────┘
-        │
-        ▼
-┌─────────────────┐
-│  SignalContext  │
-│  (Smart Cache)  │
-│  - 2min TTL     │
-│  - Deduplication│
-└─────────────────┘
-```
+### Onboarding Flow
 
-### Data Flow
+**For Candidates:**
+1. Link GitHub and LinkedIn accounts
+2. Provide intent statement (what they want to achieve)
+3. Set hard constraints (location, visa, salary range)
+4. Skills auto-extracted from linked accounts
 
-1. **Authentication**: OAuth providers → Passport → JWT token
-2. **Signal Extraction**: GitHub/LinkedIn APIs → Skill profiling → Database
-3. **Matching Algorithm**: Job requirements ↔ Candidate signals → Match score
-4. **Caching Layer**: API request → Cache check → Database (if miss) → Cache update
-5. **Notifications**: Match created → Email service → Candidate inbox
+**For Recruiters:**
+1. Link GitHub and LinkedIn accounts
+2. Create company profile
+3. Upload company logo and cover image
+4. Post first job with problem statement and requirements
 
 ---
 
-## 📡 API Documentation
+## 📊 Database Schema
 
-### Authentication Endpoints
+### Core Models
 
-```http
-GET  /auth/google           # Initiate Google OAuth
-GET  /auth/google/callback  # Google OAuth callback
-GET  /auth/github           # Initiate GitHub OAuth
-GET  /auth/github/callback  # GitHub OAuth callback
-GET  /auth/linkedin         # Initiate LinkedIn OAuth
-GET  /auth/linkedin/callback # LinkedIn OAuth callback
-GET  /auth/me               # Get current user
-POST /auth/logout           # Logout user
-```
+**User**
+- Stores basic profile information
+- Role: `candidate`, `recruiter`, or `admin`
+- Links to OAuth accounts
+- Contains intent and constraints
 
-### Recruiter Endpoints
+**Company**
+- Owned by a recruiter
+- Stores company details and branding
+- Links to jobs
 
-```http
-GET  /recruiters/companies          # List companies
-POST /recruiters/company            # Create company
-GET  /recruiters/jobs               # List jobs
-POST /recruiters/job                # Create job
-PUT  /recruiters/job/:id            # Update job
-DELETE /recruiters/job/:id          # Delete job
-GET  /recruiters/recruiter/feed     # Get candidate recommendations
-POST /recruiters/recruiter/swipe    # Swipe on candidate
-GET  /recruiters/signals            # Get incoming signals
-```
+**Job**
+- Posted by companies
+- Contains problem statement, expectations, skills required
+- Constraint-based matching
 
-### Match Endpoints
+**Swipe**
+- Records candidate/recruiter swipes
+- Tracks direction (left/right)
+- Links to potential matches
 
-```http
-GET  /matches                # Get all matches
-POST /matches/messages       # Send message
-```
+**Match**
+- Created when mutual right-swipes occur
+- Reveals identities to both parties
+- Enables messaging
 
-### Admin Endpoints
-
-```http
-GET  /admin/metrics          # System metrics
-POST /admin/data-refresh     # Trigger data refresh
-```
-
-### AI Endpoints (Internal)
-
-```http
-GET  /ai/users               # Get users data
-GET  /ai/jobs                # Get jobs data
-GET  /ai/swipes              # Get swipes data
-GET  /ai/matches             # Get matches data
-POST /ai/recommendation      # Update recommendation profile
-```
+**Application**
+- Auto-created on candidate right-swipe
+- Tracks application status
+- Managed by recruiters
 
 ---
 
-## 🎨 UI/UX Features
+## 🎨 Admin Dashboard
 
-### Design System
-- **Color Palette**: Saber Purple (#a855f7) with gradient accents
-- **Typography**: Inter, Outfit with tight tracking
-- **Components**: Glassmorphism, rounded corners (12px), subtle shadows
-- **Animations**: Framer Motion with spring physics
-- **Micro-interactions**: Scale transforms, hover states, loading spinners
+The admin dashboard is a separate React application for recruiters to manage their presence on SABER.
 
-### Performance Optimizations
-- **Intelligent Caching**: 2-minute TTL with manual refresh
-- **Request Deduplication**: Prevents simultaneous duplicate calls
-- **Lazy Loading**: Code splitting for optimal bundle size
-- **Optimistic Updates**: Instant UI feedback
-
----
-
-## 🗄️ Database Schema
-
-Key models:
-- **User**: Candidates and recruiters with OAuth accounts
-- **Company**: Recruiter organizations
-- **Job**: Technical challenges/positions
-- **Skill**: Extracted technical skills with confidence scores
-- **Swipe**: Bidirectional interest signals
-- **Match**: Mutual matches with messaging
-- **RecommendationProfile**: AI-generated user preferences
-
-See `prisma/schema.prisma` for complete schema.
-
----
-
-## 🧪 Development Commands
+### Setup
 
 ```bash
-# Backend
-npm run dev              # Start development server
-npm run build            # Build for production
-npm run start            # Start production server
-npm run db:clean         # Clean all database tables
-
-# Frontend
 cd saber-admin-dashboard
-npm run dev              # Start Vite dev server
-npm run build            # Build for production
-npm run preview          # Preview production build
+npm install
+npm run dev
+```
 
-# Database
-npx prisma studio        # Open Prisma Studio
-npx prisma migrate dev   # Create new migration
-npx prisma db seed       # Seed database
-npx prisma generate      # Regenerate Prisma client
+### Features
+
+- **Company Profile Management**: Update company details, logo, and cover image
+- **Job Posting**: Create and manage job listings
+- **Candidate Feed**: Swipe on candidates who match job requirements
+- **Signals of Interest**: View candidates who swiped right on your jobs
+- **Applications**: Track and manage candidate applications
+
+### Environment Variables
+
+Create `.env` in `saber-admin-dashboard/`:
+
+```env
+VITE_API_BASE_URL="http://localhost:3000"
+VITE_OAUTH_REDIRECT_URI="http://localhost:5173/auth/callback"
+VITE_GOOGLE_CLIENT_ID="your-google-client-id"
+VITE_GITHUB_CLIENT_ID="your-github-client-id"
+VITE_LINKEDIN_CLIENT_ID="your-linkedin-client-id"
 ```
 
 ---
 
-## 🚢 Deployment
+## 🚀 API Endpoints
 
-### Vercel (Recommended)
+### Authentication
+- `GET /auth/oauth/callback` - OAuth callback handler
+- `POST /auth/oauth/callback` - Exchange code for token
+- `POST /auth/link-provider` - Link additional OAuth account
+- `GET /auth/me` - Get current user profile
 
-1. **Push to GitHub**
+### User Management
+- `POST /user/intent` - Update candidate intent
+- `POST /user/constraints` - Update user constraints
+- `PUT /user/role` - Switch user role
+
+### Jobs (Candidate)
+- `GET /jobs/feed` - Get personalized job feed
+- `POST /jobs/swipe` - Swipe on a job
+
+### Recruiters
+- `POST /recruiters/company` - Create company profile
+- `GET /recruiters/company` - Get company details
+- `PUT /recruiters/company/images` - Upload company images
+- `POST /recruiters/job` - Create job posting
+- `GET /recruiters/jobs` - List all jobs
+- `PUT /recruiters/job/:id` - Update job
+- `DELETE /recruiters/job/:id` - Delete job
+- `GET /recruiters/feed` - Get candidate feed
+- `POST /recruiters/swipe` - Swipe on candidate
+- `GET /recruiters/signals` - Get signals of interest
+
+### Candidates
+- `GET /candidates/bookmarks` - Get bookmarked jobs
+- `POST /candidates/bookmarks` - Bookmark a job
+- `DELETE /candidates/bookmarks/:job_id` - Remove bookmark
+- `GET /candidates/applications` - Get all applications
+- `POST /candidates/applications` - Submit application
+- `DELETE /candidates/applications/:id` - Withdraw application
+
+### Matches
+- `GET /matches` - Get all matches
+- `POST /matches/messages` - Send message in match
+
+### Admin
+- `GET /admin/metrics` - Get platform metrics
+- `POST /admin/ai/keys` - Rotate AI API keys
+
+---
+
+## ⚡ Performance Optimizations
+
+### Caching Strategy
+
+**Redis Caching:**
+- Company profiles: 1 hour TTL
+- Job listings: 5 minutes TTL
+- User profiles: 1 minute TTL
+- Candidate/Recruiter feeds: 1 minute TTL
+- Signals of interest: 30 seconds TTL
+
+**React Query (Frontend):**
+- Default stale time: 5 minutes
+- Garbage collection: 20 minutes
+- Disabled automatic refetching
+- Manual refresh controls
+
+### Database Indexes
+
+Optimized indexes on:
+- `Job`: `[active, created_at]` for feed queries
+- `Swipe`: `[target_user_id, direction]` for match checks
+- `Application`: `[job_id, status]` for filtering
+- `User`: `[role, id]` for candidate pagination
+
+### Rate Limiting
+
+- Global: 100 requests/15 minutes
+- Auth endpoints: 5 requests/15 minutes
+- Swipe endpoints: 50 requests/15 minutes
+- AI endpoints: 10 requests/minute
+
+---
+
+## 📈 Performance Benchmarks
+
+Average response times (local development):
+
+| Endpoint | Response Time | Notes |
+|----------|--------------|-------|
+| `GET /health` | ~45ms | Health check |
+| `GET /auth/me` | ~250ms | Cached user profile |
+| `GET /recruiters/company` | ~230ms | Cached company data |
+| `GET /recruiters/jobs` | ~235ms | Cached job list |
+| `GET /recruiters/feed` | ~220ms | Cached candidate feed |
+| `GET /jobs/feed` | ~220ms | Cached job feed |
+| `GET /matches` | ~290ms | Match retrieval |
+
+*First-time (cold) requests may take longer due to cache population.*
+
+---
+
+## 🔒 Security Features
+
+- **JWT Authentication**: Secure token-based auth
+- **OAuth 2.0**: Trusted identity providers
+- **Rate Limiting**: Prevents abuse
+- **Helmet.js**: Security headers
+- **CORS**: Configured for specific origins
+- **Environment Variables**: Sensitive data protection
+- **Request ID Tracking**: Audit trail
+- **Swipe Limits**: Daily limits to prevent spam
+
+---
+
+## 🌐 Deployment
+
+### Backend (Vercel)
+
+1. **Connect GitHub repository** to Vercel
+2. **Set environment variables** in Vercel dashboard
+3. **Deploy** - Vercel auto-deploys on push to main
+
+Production URL: `https://saber-api-backend.vercel.app`
+
+### Frontend (Vercel)
+
+1. **Navigate to dashboard directory**
 ```bash
-git add .
-git commit -m "feat: initial deployment"
-git push origin main
-```
-
-2. **Connect to Vercel**
-   - Import project from GitHub
-   - Configure environment variables
-   - Deploy
-
-3. **Environment Variables**
-   - Add all `.env` variables to Vercel dashboard
-   - Ensure `DATABASE_URL` points to production database
-
-### Manual Deployment
-
-```bash
-# Build backend
-npm run build
-
-# Build frontend
 cd saber-admin-dashboard
-npm run build
-
-# Start production server
-npm start
 ```
 
+2. **Deploy to Vercel**
+```bash
+vercel --prod
+```
+
+Production URL: `https://saber-admin-dashboard.vercel.app`
+
+### Environment Variables Checklist
+
+**Backend (Vercel):**
+- ✅ DATABASE_URL
+- ✅ JWT_SECRET
+- ✅ REDIS_URL
+- ✅ GOOGLE_CLIENT_ID & SECRET
+- ✅ GITHUB_CLIENT_ID & SECRET
+- ✅ LINKEDIN_CLIENT_ID & SECRET
+- ✅ CLOUDINARY credentials
+- ✅ EMAIL_USER & EMAIL_PASS
+- ✅ BASE_URL (production URL)
+- ✅ FRONTEND_URL (dashboard URL)
+
+**Frontend (Vercel):**
+- ✅ VITE_API_BASE_URL
+- ✅ VITE_OAUTH_REDIRECT_URI
+- ✅ VITE_GOOGLE_CLIENT_ID
+- ✅ VITE_GITHUB_CLIENT_ID
+- ✅ VITE_LINKEDIN_CLIENT_ID
+
 ---
 
-## 🔐 Security
+## 🧪 Testing
 
-- ✅ **OAuth 2.0** authentication
-- ✅ **JWT** tokens with secure secrets
-- ✅ **Helmet.js** security headers
-- ✅ **CORS** configuration
-- ✅ **Rate limiting** on API endpoints
-- ✅ **SQL injection** prevention via Prisma
-- ✅ **XSS protection** via React
-- ✅ **Environment variables** for secrets
+### Run Performance Benchmark
 
----
+```bash
+npx tsx scripts/benchmark.ts
+```
 
-## 📊 Performance Metrics
-
-- **API Response Time**: < 100ms (cached), < 500ms (fresh)
-- **Cache Hit Rate**: ~85%
-- **Database Queries**: Optimized with indexes
-- **Bundle Size**: < 500KB (gzipped)
-- **Lighthouse Score**: 95+ (Performance, Accessibility, Best Practices)
+This will test all major API endpoints with real database users and display:
+- Response times
+- Status codes
+- Response previews
+- Average latency
 
 ---
 
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
+## 📝 Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-### Commit Convention
-Follow [Conventional Commits](https://www.conventionalcommits.org/):
-- `feat:` New features
-- `fix:` Bug fixes
-- `docs:` Documentation changes
-- `style:` Code style changes
-- `refactor:` Code refactoring
-- `perf:` Performance improvements
-- `test:` Test additions/changes
-- `chore:` Build process or auxiliary tool changes
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
 
 ---
 
-## 📝 License
+## 👥 Team
 
-This project is licensed under the ISC License.
-
----
-
-## 👨‍💻 Author
-
-**Sreecharan Desu**
-- GitHub: [@sreecharan-desu](https://github.com/sreecharan-desu)
-- LinkedIn: [Sreecharan Desu](https://linkedin.com/in/sreecharan-desu)
+Built by **SreeCharan Desu** and the SABER team.
 
 ---
 
 ## 🙏 Acknowledgments
 
+- **Neon** for PostgreSQL hosting
+- **Upstash** for Redis caching
 - **Vercel** for deployment platform
-- **Neon** for serverless PostgreSQL
-- **Prisma** for amazing ORM
-- **Framer Motion** for smooth animations
-- **Lucide** for beautiful icons
+- **Cloudinary** for image management
+- **Prisma** for ORM
+- **TanStack Query** for state management
 
 ---
 
-<div align="center">
+## 📞 Support
 
-**Built with ❤️ using TypeScript, React, and Node.js**
+For issues, questions, or feature requests, please open an issue on GitHub.
 
-⭐ Star this repo if you find it helpful!
+**Live Demo:** [https://saber-admin-dashboard.vercel.app](https://saber-admin-dashboard.vercel.app)
 
-</div>
+**API Documentation:** [https://saber-api-backend.vercel.app/health](https://saber-api-backend.vercel.app/health)

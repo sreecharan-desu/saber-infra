@@ -44,6 +44,7 @@ model User {
   companies       Company[]
 
   @@index([role])
+  @@index([role, id]) // Optimization for candidate feed fetching
 }
 
 model OAuthAccount {
@@ -110,7 +111,7 @@ model Job {
   applications      Application[]
 
   @@index([company_id])
-  @@index([active])
+  @@index([active, created_at]) // Optimized: Feed usually queries active jobs ordered by date
 }
 
 model Swipe {
@@ -129,7 +130,7 @@ model Swipe {
 
   @@unique([user_id, job_id, target_user_id])
   @@index([job_id])
-  @@index([target_user_id])
+  @@index([target_user_id, direction]) // Optimized: Check if I was swiped right by someone
   @@index([user_id, direction])
   @@index([direction])
 }
@@ -222,6 +223,6 @@ model Application {
 
   @@unique([user_id, job_id])
   @@index([user_id])
-  @@index([job_id])
+  @@index([job_id, status]) // Optimized: Frequent filtering by job and status
   @@index([status])
 }
