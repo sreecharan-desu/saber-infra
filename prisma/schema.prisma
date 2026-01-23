@@ -23,6 +23,7 @@ model User {
   role            UserRole @default(candidate)
   name            String
   email           String   @unique
+  email_hash      String   @unique @default("")
   photo_url       String?
   intent_text     String?
   why_text        String?
