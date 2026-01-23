@@ -11,6 +11,7 @@ const prisma = new PrismaClient().$extends({
                     OAuthAccount: ['access_token', 'refresh_token', 'raw_data_json'],
                     Company: ['name', 'website', 'email'],
                     Job: ['problem_statement', 'expectations', 'non_negotiables', 'deal_breakers', 'constraints_json'],
+                    Match: ['explainability_json'],
                     Message: ['content'],
                     Bookmark: ['notes'],
                     Application: ['cover_note'],
@@ -104,7 +105,8 @@ const prisma = new PrismaClient().$extends({
                                 matches: 'Match',
                                 messages: 'Message',
                                 bookmarks: 'Bookmark',
-                                applications: 'Application'
+                                applications: 'Application',
+                                payments: 'Payment'
                             };
 
                             const nextModel = modelMapping[key];
