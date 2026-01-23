@@ -9,6 +9,10 @@ const swipeSchema = z.object({
 });
 
 import { getCache, setCache, deleteCache } from "../utils/cache";
+import {
+  sendApplicationNotification,
+  sendJobOfferEmail,
+} from "../services/email.service";
 
 export const getFeed = async (
   req: Request,
@@ -167,60 +171,69 @@ export const swipe = async (
     }
 
     // Transactional Logic
-    await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       // 1. Record Swipe
       await tx.swipe.create({
         data: {
           user_id: userId,
           job_id,
           direction,
-          // target_user_id is null for Candidate swipe
         },
       });
+
+      let applicationData = null;
+      let matchData = null;
 
       if (direction === "right") {
         // 2. Create Application automatically on right swipe
         try {
-          await tx.application.create({
+          applicationData = await tx.application.create({
             data: {
               user_id: userId,
               job_id,
               status: "pending",
-              cover_note: null, // No cover note on swipe, can be added later
+              cover_note: null,
+            },
+            include: {
+              user: true,
+              job: {
+                include: {
+                  company: {
+                    include: { recruiter: true },
+                  },
+                },
+              },
             },
           });
         } catch (appErr) {
-          // If application already exists (duplicate), ignore
           console.log("Application may already exist for this job");
         }
 
         // 3. Check for Match (Did Recruiter swipe me?)
-        // Recruiter swipe: user_id=Recruiter, job_id=Job, target_user_id=Me, direction=right
         const reciprocalSwipe = await tx.swipe.findFirst({
           where: {
             job_id,
             target_user_id: userId,
             direction: "right",
-          } as any,
+          },
         });
 
         if (reciprocalSwipe) {
-          // MUTUAL MATCH!
-          // Reveal identities.
-
-          // Explainability Generation (Mocked for speed but logic is simple overlap)
           const explainability = {
             match_quality: "high",
             reason: "Mutual interest and constraint alignment.",
           };
 
-          const match = await tx.match.create({
+          matchData = await tx.match.create({
             data: {
               candidate_id: userId as string,
               job_id,
               reveal_status: true,
               explainability_json: explainability as any,
-              // Note: Match does not need to store job_id? Wait, schema has job_id. Fixed in earlier step.
+            },
+            include: {
+              candidate: true,
+              job: { include: { company: true } },
             },
           });
 
@@ -235,12 +248,39 @@ export const swipe = async (
               status: "reviewing",
             },
           });
-
-          // Notify? Return match info.
-          return match;
         }
       }
+      return { applicationData, matchData };
     });
+
+    // 4. Send Notifications (Outside transaction)
+    if (result.applicationData) {
+      const app = result.applicationData;
+      const targetEmail =
+        app.job.company.email || app.job.company.recruiter.email;
+      if (targetEmail) {
+        sendApplicationNotification({
+          companyEmail: targetEmail,
+          companyName: app.job.company.name,
+          candidateName: app.user.name,
+          candidateEmail: app.user.email,
+          jobTitle: app.job.problem_statement,
+          coverNote: app.cover_note ?? undefined,
+          applicationId: app.id,
+        }).catch((err) => console.error("Application email failed", err));
+      }
+    }
+
+    if (result.matchData) {
+      const match = result.matchData;
+      sendJobOfferEmail({
+        candidateEmail: match.candidate.email,
+        candidateName: match.candidate.name,
+        companyName: match.job.company.name,
+        problemStatement: match.job.problem_statement,
+        jobId: match.job_id,
+      }).catch((err) => console.error("Match email failed", err));
+    }
 
     // Invalidate Feed Cache for this user so they don't see the swiped job
     await deleteCache(`candidate_feed_${userId}`);
