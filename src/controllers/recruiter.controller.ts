@@ -49,6 +49,18 @@ export const createCompany = async (req: Request, res: Response, next: NextFunct
     }
 };
 
+export const getMyCompany = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const recruiterId = (req.user as any)?.id;
+        const company = await prisma.company.findFirst({
+            where: { recruiter_id: recruiterId }
+        });
+        res.json({ company });
+    } catch (err) {
+        next(err);
+    }
+};
+
 export const getMyJobs = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const recruiterId = (req.user as any)?.id;

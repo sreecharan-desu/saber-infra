@@ -6,6 +6,7 @@ import { swipeLimiter } from '../middleware/rateLimit.middleware';
 const router = Router();
 
 router.post('/company', authenticateJWT, requireRole(['recruiter']), recruiterController.createCompany);
+router.get('/company', authenticateJWT, requireRole(['recruiter']), recruiterController.getMyCompany);
 router.post('/job', authenticateJWT, requireRole(['recruiter']), recruiterController.createJob);
 router.get('/jobs', authenticateJWT, requireRole(['recruiter']), recruiterController.getMyJobs);
 router.get('/recruiter/feed', authenticateJWT, requireRole(['recruiter']), recruiterController.getRecruiterFeed); 
