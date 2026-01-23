@@ -1,8 +1,8 @@
 # SABER - Intent-Based Job Matching Platform
 
 
-[![Periodical Signal Refresh](https://github.com/sreecharan-desu/saber-infra/actions/workflows/signal-refresh.yml/badge.svg)](https://github.com/sreecharan-desu/saber-infra/actions/workflows/signal-refresh.yml)
-[![AI Recommendation Cron](https://github.com/sreecharan-desu/saber-infra/actions/workflows/ai-cron.yml/badge.svg)](https://github.com/sreecharan-desu/saber-infra/actions/workflows/ai-cron.yml)
+[![Periodical Signal Refresh](https://github.com/sreecharan-desu/SABER/actions/workflows/signal-refresh.yml/badge.svg)](https://github.com/sreecharan-desu/SABER/actions/workflows/signal-refresh.yml)
+[![AI Recommendation Cron](https://github.com/sreecharan-desu/SABER/actions/workflows/ai-cron.yml/badge.svg)](https://github.com/sreecharan-desu/SABER/actions/workflows/ai-cron.yml)
 
 ![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=node.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
