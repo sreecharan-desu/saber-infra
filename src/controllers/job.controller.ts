@@ -115,7 +115,22 @@ export const swipe = async (req: Request, res: Response, next: NextFunction) => 
       });
 
       if (direction === 'right') {
-        // 2. Check for Match (Did Recruiter swipe me?)
+        // 2. Create Application automatically on right swipe
+        try {
+          await tx.application.create({
+            data: {
+              user_id: userId,
+              job_id,
+              status: 'pending',
+              cover_note: null // No cover note on swipe, can be added later
+            }
+          });
+        } catch (appErr) {
+          // If application already exists (duplicate), ignore
+          console.log('Application may already exist for this job');
+        }
+
+        // 3. Check for Match (Did Recruiter swipe me?)
         // Recruiter swipe: user_id=Recruiter, job_id=Job, target_user_id=Me, direction=right
         const reciprocalSwipe = await tx.swipe.findFirst({
           where: {
@@ -142,6 +157,18 @@ export const swipe = async (req: Request, res: Response, next: NextFunction) => 
               reveal_status: true,
               explainability_json: explainability as any,
             },
+          });
+          
+          // Update application status to 'reviewing' on match
+          await tx.application.updateMany({
+            where: {
+              user_id: userId,
+              job_id,
+              status: 'pending'
+            },
+            data: {
+              status: 'reviewing'
+            }
           });
           
           // Notify? Return match info.
