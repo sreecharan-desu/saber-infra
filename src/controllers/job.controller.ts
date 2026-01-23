@@ -81,6 +81,7 @@ export const getFeed = async (req: Request, res: Response, next: NextFunction) =
       skills_required: job.skills_required,
       constraints: job.constraints_json,
       company: {
+        name: job.company.name,
         logo_url: job.company.logo_url,
         cover_image_url: job.company.cover_image_url
       }
