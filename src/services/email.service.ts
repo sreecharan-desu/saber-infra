@@ -30,38 +30,40 @@ export const sendJobOfferEmail = async ({
     <head>
         <meta charset="utf-8">
         <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #000; color: #fff; margin: 0; padding: 0; }
-            .container { max-width: 600px; margin: 40px auto; padding: 40px; border: 1px solid #333; border-radius: 8px; background-color: #0a0a0a; }
-            .logo { font-weight: bold; font-size: 24px; letter-spacing: -1px; margin-bottom: 32px; color: #fff; text-decoration: none; display: flex; align-items: center; }
-            .logo-triangle { width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-bottom: 20px solid #fff; margin-right: 10px; }
-            .title { font-size: 20px; font-weight: 600; margin-bottom: 16px; letter-spacing: -0.5px; }
-            .message { color: #888; line-height: 1.6; font-size: 15px; margin-bottom: 32px; }
-            .card { background: #111; border: 1px solid #333; padding: 24px; border-radius: 6px; margin-bottom: 32px; }
-            .card-label { font-size: 11px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
-            .card-content { font-size: 16px; color: #fff; font-weight: 500; }
-            .btn { background: #fff; color: #000; padding: 12px 24px; border-radius: 4px; text-decoration: none; font-weight: 600; display: inline-block; font-size: 14px; }
-            .footer { margin-top: 40px; border-top: 1px solid #333; pt: 24px; font-size: 12px; color: #444; }
+            body { font-family: 'Inter', -apple-system, sans-serif; background-color: #000; color: #fff; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 40px auto; padding: 40px; border: 1px solid #1a1a1a; border-radius: 12px; background-color: #050505; }
+            .logo { font-weight: 800; font-size: 26px; letter-spacing: -2px; margin-bottom: 40px; color: #fff; text-decoration: none; display: flex; align-items: center; }
+            .logo-mark { width: 32px; height: 32px; background: linear-gradient(135deg, #a855f7 0%, #f472b6 100%); border-radius: 6px; margin-right: 12px; display: inline-block; position: relative; }
+            .logo-mark:after { content: ''; position: absolute; inset: 6px; background: #000; border-radius: 3px; clip-path: polygon(0 0, 100% 0, 0 100%); }
+            .title { font-size: 24px; font-weight: 800; margin-bottom: 20px; letter-spacing: -1px; background: linear-gradient(to bottom, #fff, #888); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+            .message { color: #888; line-height: 1.6; font-size: 16px; margin-bottom: 32px; }
+            .card { background: #0a0a0a; border: 1px solid #1a1a1a; padding: 32px; border-radius: 8px; margin-bottom: 32px; position: relative; overflow: hidden; }
+            .card:before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 1px; background: linear-gradient(90deg, transparent, #a855f7, transparent); }
+            .card-label { font-size: 10px; font-weight: 800; color: #a855f7; text-transform: uppercase; letter-spacing: 0.25em; margin-bottom: 12px; }
+            .card-content { font-size: 18px; color: #fff; font-weight: 600; line-height: 1.4; }
+            .btn { background: #fff; color: #000; padding: 14px 28px; border-radius: 6px; text-decoration: none; font-weight: 800; display: inline-block; font-size: 14px; letter-spacing: -0.5px; transition: all 0.2s ease; }
+            .footer { margin-top: 48px; border-top: 1px solid #1a1a1a; padding-top: 24px; font-size: 11px; color: #333; text-transform: uppercase; letter-spacing: 0.1em; }
         </style>
     </head>
     <body>
         <div class="container">
             <div class="logo">
-                <div class="logo-triangle"></div> SABER
+                <div class="logo-mark"></div> SABER
             </div>
-            <h1 class="title">Handshake Request from ${companyName}</h1>
+            <h1 class="title">Handshake Materialized</h1>
             <p class="message">
-                Hello ${candidateName}, a high-performance workspace has identified your technical signal as a prime match for their current mission.
+                Hello ${candidateName}, a high-fidelity organizational mission has established a handshake with your technical core.
             </p>
             <div class="card">
-                <div class="card-label">Problem Statement</div>
+                <div class="card-label">Core Mission Statement</div>
                 <div class="card-content">
                     "${problemStatement}"
                 </div>
             </div>
             <p class="message">
-                Review the technical requirements and confirm your interest to initiate a mutual reveal.
+                Align your technical core with this mission to initiate full signal synchronization.
             </p>
-            <a href="https://saber.sh/discover/${jobId}" class="btn">View Challenge</a>
+            <a href="${process.env.FRONTEND_URL}/discover/${jobId}" class="btn">SYNCHRONIZE NOW</a>
             <div class="footer">
                 Powered by SABER AI Engine. This is an automated discovery alert.
             </div>
