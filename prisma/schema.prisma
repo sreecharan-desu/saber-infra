@@ -77,6 +77,8 @@ model Company {
   name        String
   website     String?
   email       String?
+  logo_url    String?
+  cover_image_url String?
   verified    Boolean  @default(false)
   created_at  DateTime @default(now())
   

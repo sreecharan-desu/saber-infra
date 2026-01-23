@@ -5,7 +5,57 @@ import { Prisma } from '@prisma/client';
 import { getCache, setCache, deleteCache } from '../utils/cache';
 import * as userService from '../services/user.service';
 import { sendJobOfferEmail } from '../services/email.service';
+import cloudinary from '../config/cloudinary';
 
+const uploadToCloudinary = (buffer: Buffer, folder: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream({
+            folder: `saber/${folder}`,
+        }, (error, result) => {
+            if (error) return reject(error);
+            if (result) resolve(result.secure_url);
+        }).end(buffer);
+    });
+};
+
+export const updateCompanyImages = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const recruiterId = (req.user as any)?.id;
+        const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+        
+        const company = await prisma.company.findFirst({
+            where: { recruiter_id: recruiterId }
+        });
+
+        if (!company) return res.status(404).json({ error: "Company not found" });
+        
+        const updates: any = {};
+
+        if (files['logo']?.[0]) {
+            updates.logo_url = await uploadToCloudinary(files['logo'][0].buffer, 'logos');
+        }
+        
+        if (files['cover_image']?.[0]) {
+            updates.cover_image_url = await uploadToCloudinary(files['cover_image'][0].buffer, 'covers');
+        }
+
+        if (Object.keys(updates).length === 0) {
+            return res.status(400).json({ error: "No images provided" });
+        }
+
+        const updatedCompany = await prisma.company.update({
+            where: { id: company.id },
+            data: updates
+        });
+        
+        // Invalidate cache
+        await deleteCache(`company_${recruiterId}`);
+
+        res.json({ company: updatedCompany });
+    } catch (err) {
+        next(err);
+    }
+};
 const companySchema = z.object({
   name: z.string(),
   website: z.string().optional(),

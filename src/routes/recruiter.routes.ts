@@ -3,9 +3,12 @@ import * as recruiterController from '../controllers/recruiter.controller';
 import { authenticateJWT, requireRole } from '../middleware/auth.middleware';
 import { swipeLimiter } from '../middleware/rateLimit.middleware';
 
+import { upload } from '../middleware/upload.middleware';
+
 const router = Router();
 
 router.post('/company', authenticateJWT, requireRole(['recruiter']), recruiterController.createCompany);
+router.put('/company/images', authenticateJWT, requireRole(['recruiter']), upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'cover_image', maxCount: 1 }]), recruiterController.updateCompanyImages);
 router.get('/company', authenticateJWT, requireRole(['recruiter']), recruiterController.getMyCompany);
 router.post('/job', authenticateJWT, requireRole(['recruiter']), recruiterController.createJob);
 router.get('/jobs', authenticateJWT, requireRole(['recruiter']), recruiterController.getMyJobs);
