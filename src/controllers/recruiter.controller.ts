@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { speedCache } from '../utils/cache';
 import * as userService from '../services/user.service';
+import { sendJobOfferEmail } from '../services/email.service';
 
 const companySchema = z.object({
   name: z.string(),
@@ -244,6 +245,9 @@ export const recruiterSwipe = async (req: Request, res: Response, next: NextFunc
         const candidate_id = target_user_id;
         const userId = (req.user as any)?.id; // Recruiter
 
+        let matchCreated = false;
+        let matchDetails: any = null;
+
         await prisma.$transaction(async (tx) => {
              await tx.swipe.create({
                  data: {
@@ -265,20 +269,35 @@ export const recruiterSwipe = async (req: Request, res: Response, next: NextFunc
                  });
 
                  if (reciprocal) {
-                      await tx.match.create({
-                         data: {
-                             candidate_id,
-                             job_id,
-                             reveal_status: true,
-                             explainability_json: { reason: "Mutual match" } as any
-                         }
-                     });
-                     // Notify
+                      matchDetails = await tx.match.create({
+                          data: {
+                              candidate_id,
+                              job_id,
+                              reveal_status: true,
+                              explainability_json: { reason: "Mutual match" } as any
+                          },
+                          include: {
+                              candidate: true,
+                              job: { include: { company: true } }
+                          }
+                      });
+                      matchCreated = true;
                  }
              }
         });
+
+        if (matchCreated && matchDetails) {
+            // Async notify
+            sendJobOfferEmail({
+                candidateEmail: matchDetails.candidate.email,
+                candidateName: matchDetails.candidate.name,
+                companyName: matchDetails.job.company.name,
+                problemStatement: matchDetails.job.problem_statement,
+                jobId: matchDetails.job_id
+            }).catch(e => console.error('Email notify failed', e));
+        }
         
-        res.json({ success: true });
+        res.json({ success: true, is_mutual: matchCreated, match: matchDetails });
     } catch(err) {
         // Handle duplicate swipe error
         if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
@@ -328,13 +347,35 @@ export const deleteJob = async (req: Request, res: Response, next: NextFunction)
 
         if (!job) return res.status(404).json({ error: 'Job not found or unauthorized' });
 
-        // Soft delete
-        await prisma.job.update({
-            where: { id },
-            data: { active: false }
+        // Hard delete with dependency cleanup
+        await prisma.$transaction(async (tx) => {
+            // Remove related swipes
+            await tx.swipe.deleteMany({
+                where: { job_id: id }
+            });
+            
+            // Remove related matches and their messages
+            const matches = await tx.match.findMany({
+                where: { job_id: id },
+                select: { id: true }
+            });
+            const matchIds = matches.map(m => m.id);
+            
+            await tx.message.deleteMany({
+                where: { match_id: { in: matchIds } }
+            });
+            
+            await tx.match.deleteMany({
+                where: { job_id: id }
+            });
+
+            // Finally delete the job
+            await tx.job.delete({
+                where: { id }
+            });
         });
 
-        res.json({ success: true, message: 'Job deleted successfully' });
+        res.json({ success: true, message: 'Job and all associated data deleted successfully' });
     } catch (err) {
         next(err);
     }
