@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import prisma from '../config/prisma';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
-import { speedCache } from '../utils/cache';
+import { getCache, setCache, deleteCache } from '../utils/cache';
 import * as userService from '../services/user.service';
 import { sendJobOfferEmail } from '../services/email.service';
 
@@ -42,6 +42,9 @@ export const createCompany = async (req: Request, res: Response, next: NextFunct
         
         const enrichedUser = await userService.enrichUserWithOnboarding(updatedUser);
         
+        // Invalidate cache
+        await deleteCache(`company_${recruiterId}`);
+
         res.json({ 
             company: { ...company, company_id: company.id },
             user: enrichedUser
@@ -54,9 +57,19 @@ export const createCompany = async (req: Request, res: Response, next: NextFunct
 export const getMyCompany = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const recruiterId = (req.user as any)?.id;
+        const cacheKey = `company_${recruiterId}`;
+        
+        const cached = await getCache(cacheKey);
+        if (cached) return res.json({ company: cached });
+
         const company = await prisma.company.findFirst({
             where: { recruiter_id: recruiterId }
         });
+
+        if (company) {
+            await setCache(cacheKey, company);
+        }
+
         res.json({ company });
     } catch (err) {
         next(err);
@@ -66,10 +79,18 @@ export const getMyCompany = async (req: Request, res: Response, next: NextFuncti
 export const getMyJobs = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const recruiterId = (req.user as any)?.id;
+        const cacheKey = `jobs_${recruiterId}`;
+
+        const cached = await getCache(cacheKey);
+        if (cached) return res.json({ jobs: cached });
+
         const jobs = await prisma.job.findMany({
             where: { company: { recruiter_id: recruiterId } },
             include: { company: true }
         });
+
+        await setCache(cacheKey, jobs);
+
         res.json({ jobs });
     } catch (err) {
         next(err);
@@ -95,8 +116,9 @@ export const createJob = async (req: Request, res: Response, next: NextFunction)
             }
         });
 
-        // Invalidate recruiter signals cache
-        speedCache.delete(`signals_${recruiterId}`);
+        // Invalidate recruiter signals cache and jobs list
+        await deleteCache(`signals_${recruiterId}`);
+        await deleteCache(`jobs_${recruiterId}`);
 
         res.json(job);
     } catch (err) {
@@ -172,7 +194,7 @@ export const getSignalsOfInterest = async (req: Request, res: Response, next: Ne
         const recruiterId = (req.user as any)?.id;
         const cacheKey = `signals_${recruiterId}`;
         
-        const cachedSignals = speedCache.get(cacheKey);
+        const cachedSignals = await getCache(cacheKey);
         if (cachedSignals) return res.json({ signals: cachedSignals, is_cached: true });
         
         // 1. Get my active jobs
@@ -229,7 +251,7 @@ export const getSignalsOfInterest = async (req: Request, res: Response, next: Ne
         }));
 
         // Cache recruiter signals for 30 seconds to keep it snappy but fresh
-        speedCache.set(cacheKey, signals, 30000);
+        await setCache(cacheKey, signals, 30);
 
         res.json({ signals, is_cached: false });
     } catch (err) {
@@ -300,6 +322,9 @@ export const recruiterSwipe = async (req: Request, res: Response, next: NextFunc
             }).catch(e => console.error('Email notify failed', e));
         }
         
+        // Invalidate signals just in case
+        await deleteCache(`signals_${userId}`);
+
         res.json({ success: true, is_mutual: matchCreated, match: matchDetails });
     } catch(err) {
         // Handle duplicate swipe error
@@ -332,8 +357,9 @@ export const updateJob = async (req: Request, res: Response, next: NextFunction)
             }
         });
 
-        // Invalidate recruiter signals cache
-        speedCache.delete(`signals_${userId}`);
+        // Invalidate recruiter signals cache and jobs list
+        await deleteCache(`signals_${userId}`);
+        await deleteCache(`jobs_${userId}`);
 
         res.json(updatedJob);
     } catch (err) {
@@ -381,8 +407,9 @@ export const deleteJob = async (req: Request, res: Response, next: NextFunction)
             });
         });
 
-        // Invalidate recruiter signals cache
-        speedCache.delete(`signals_${userId}`);
+        // Invalidate recruiter signals cache and jobs list
+        await deleteCache(`signals_${userId}`);
+        await deleteCache(`jobs_${userId}`);
 
         res.json({ success: true, message: 'Job and all associated data deleted successfully' });
     } catch (err) {

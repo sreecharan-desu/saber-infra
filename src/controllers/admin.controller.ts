@@ -3,12 +3,12 @@ import prisma from '../config/prisma';
 import logger from '../utils/logger';
 import { randomUUID, createHash } from 'crypto';
 
-import { speedCache } from '../utils/cache';
+import { getCache, setCache } from '../utils/cache';
 
 export const getMetrics = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const cacheKey = 'admin_metrics_global';
-        const cachedData = speedCache.get(cacheKey);
+        const cachedData = await getCache(cacheKey);
         
         if (cachedData) {
             return res.json(cachedData);
@@ -35,7 +35,7 @@ export const getMetrics = async (req: Request, res: Response, next: NextFunction
         };
 
         // Cache for 5 minutes
-        speedCache.set(cacheKey, { ...metrics, is_cached: true }, 300000);
+        await setCache(cacheKey, { ...metrics, is_cached: true }, 300);
 
         res.json(metrics);
     } catch (err) {

@@ -97,7 +97,8 @@ export const swipe = async (req: Request, res: Response, next: NextFunction) => 
           created_at: { gte: startOfDay },
         },
       });
-      if (todaySwipes >= 10) {
+      const limit = parseInt(process.env.SWIPE_LIMIT || '50');
+      if (todaySwipes >= limit) {
         return res.status(429).json({ error: 'Daily right-swipe limit reached' });
       }
     }

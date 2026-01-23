@@ -15,11 +15,6 @@ export const getCache = async (key: string) => {
 
 export const setCache = async (key: string, data: any, ttlSeconds: number = DEFAULT_TTL) => {
   try {
-    // If ttlSeconds is passed in MS (large number), convert to seconds roughly
-    if (ttlSeconds > 100000) {
-        ttlSeconds = Math.floor(ttlSeconds / 1000);
-    }
-    
     await redisClient.set(key, JSON.stringify(data), {
       EX: ttlSeconds
     });
@@ -34,6 +29,4 @@ export const deleteCache = async (key: string) => {
     } catch (err) {
         console.error('Redis delete error', err);
     }
-};
-
-
+}
