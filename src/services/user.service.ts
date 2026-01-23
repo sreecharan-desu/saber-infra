@@ -142,5 +142,10 @@ export const enrichUserWithOnboarding = async (user: any) => {
     }
   }
   
-  return { ...user, onboarding, company_id };
+  return { 
+    ...user, 
+    onboarding, 
+    company_id,
+    oauth_accounts: accounts 
+  };
 };
