@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import logger from "../utils/logger";
+import { config } from "../config/env";
 
 const transporter = nodemailer.createTransport({
   service: "gmail", // Defaulting to gmail for common use, can be changed
@@ -63,7 +64,7 @@ export const sendJobOfferEmail = async ({
             <p class="message">
                 Align your technical core with this mission to initiate full signal synchronization.
             </p>
-            <a href="${process.env.FRONTEND_URL}/discover/${jobId}" class="btn">SYNCHRONIZE NOW</a>
+            <a href="${config.candidateFrontendUrl}/discover/${jobId}" class="btn">SYNCHRONIZE NOW</a>
             <div class="footer">
                 Powered by SABER AI Engine. This is an automated discovery alert.
             </div>
@@ -174,7 +175,7 @@ export const sendApplicationNotification = async ({
             <p class="message">
                 Review the candidate's full profile and technical signals in your SABER dashboard.
             </p>
-            <a href="${process.env.BASE_URL}/admin" class="btn">VIEW APPLICATION</a>
+            <a href="${config.recruiterFrontendUrl}/admin" class="btn">VIEW APPLICATION</a>
             <div class="footer">
                 Powered by SABER AI Engine. This is an automated application notification.
             </div>
@@ -257,7 +258,7 @@ export const sendStatusUpdateEmail = async ({
             <p class="message">
                 Log in to your dashboard to see the latest updates and next steps.
             </p>
-            <a href="${process.env.FRONTEND_URL}/applications" class="btn">VIEW DASHBOARD</a>
+            <a href="${config.candidateFrontendUrl}/applications" class="btn">VIEW DASHBOARD</a>
             <div class="footer">
                 Powered by SABER AI Engine. This is an automated status update.
             </div>
