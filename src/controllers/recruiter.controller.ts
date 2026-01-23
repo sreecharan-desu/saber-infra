@@ -176,7 +176,7 @@ export const createJob = async (req: Request, res: Response, next: NextFunction)
     }
 };
 
-    export const getRecruiterFeed = async (req: Request, res: Response, next: NextFunction) => {
+export const getRecruiterFeed = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const userId = (req.user as any)?.id;
         const cacheKey = `recruiter_feed_${userId}`;
