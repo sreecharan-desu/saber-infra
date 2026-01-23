@@ -61,8 +61,8 @@ export const getFeed = async (
       return false;
     };
 
-    const recommendedList: any[] = [];
-    const remainingList: any[] = [];
+    const constraintMatches: any[] = [];
+    const nonMatches: any[] = [];
 
     jobsPool.forEach((job) => {
       const userC = (user.constraints_json as Record<string, any>) || {};
@@ -82,15 +82,29 @@ export const getFeed = async (
         if (userSkillNames.has(s.toLowerCase())) score += 1;
       });
 
-      if (matchesConstraints && score > 0) {
-        recommendedList.push({ job, score });
+      if (matchesConstraints) {
+        constraintMatches.push({ job, score });
       } else {
-        remainingList.push(job);
+        nonMatches.push(job);
       }
     });
 
-    // Sort recommended by score
-    recommendedList.sort((a, b) => b.score - a.score);
+    // Sort constraint matches by score
+    constraintMatches.sort((a, b) => b.score - a.score);
+
+    // Decide how many to put in "Recommended" (jobs)
+    // Primary: those with positive score
+    // Fallback: top 15 if no positive scores exist
+    let splitIndex = constraintMatches.filter((m) => m.score > 0).length;
+    if (splitIndex === 0 && constraintMatches.length > 0) {
+      splitIndex = Math.min(constraintMatches.length, 15);
+    }
+
+    const recommendedItems = constraintMatches.slice(0, splitIndex);
+    const remainingItems = [
+      ...constraintMatches.slice(splitIndex).map((m) => m.job),
+      ...nonMatches,
+    ];
 
     const formatJob = (job: any) => ({
       id: job.id,
@@ -111,8 +125,8 @@ export const getFeed = async (
     });
 
     const response = {
-      jobs: recommendedList.map((r) => formatJob(r.job)),
-      all: remainingList.map((job) => formatJob(job)),
+      jobs: recommendedItems.map((r) => formatJob(r.job)),
+      all: remainingItems.map((job) => formatJob(job)),
     };
 
     // Cache for 60 seconds
