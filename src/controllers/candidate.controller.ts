@@ -74,7 +74,7 @@ export const createBookmark = async (req: Request, res: Response, next: NextFunc
 
 export const deleteBookmark = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { job_id } = req.params;
+    const job_id = req.params.job_id as string;
     const userId = (req.user as any)?.id;
 
     await prisma.bookmark.delete({
@@ -207,7 +207,7 @@ export const createApplication = async (req: Request, res: Response, next: NextF
 
 export const withdrawApplication = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const userId = (req.user as any)?.id;
 
     const application = await prisma.application.findUnique({
@@ -247,7 +247,7 @@ const updateApplicationStatusSchema = z.object({
 
 export const updateApplicationStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { status } = updateApplicationStatusSchema.parse(req.body);
     const userId = (req.user as any)?.id;
 
@@ -295,7 +295,7 @@ export const updateApplicationStatus = async (req: Request, res: Response, next:
 
 export const getJobApplications = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { job_id } = req.params;
+    const job_id = req.params.job_id as string;
     const userId = (req.user as any)?.id;
     const status = req.query.status as string | undefined;
 
