@@ -28,7 +28,7 @@ model User {
   why_text        String?
   constraints_json Json?
   created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAtw
+  updated_at      DateTime @updatedAt
 
   oauth_accounts  OAuthAccount[]
   skills          Skill[]
