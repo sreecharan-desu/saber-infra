@@ -1,14 +1,10 @@
-import {
-  PrismaClient,
-  UserRole,
-  SwipeDirection,
-  ApplicationStatus,
-} from "@prisma/client";
+import { UserRole, SwipeDirection, ApplicationStatus } from "@prisma/client";
 import { faker } from "@faker-js/faker";
 import dotenv from "dotenv";
-dotenv.config();
+import prisma from "../src/config/prisma";
+// Now using encrypted Prisma client - all data will be automatically encrypted!
 
-const prisma = new PrismaClient();
+dotenv.config();
 
 async function main() {
   console.log("🌱 Seeding Recruiter Analytics Data...");
