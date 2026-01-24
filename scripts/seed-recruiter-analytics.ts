@@ -59,13 +59,14 @@ async function main() {
     });
   }
 
-  // 3. Create active jobs (Ensure at least 5)
+  // 3. Create active jobs (Ensure at least 20)
   const existingJobsCount = await prisma.job.count({
     where: { company_id: company.id },
   });
-  if (existingJobsCount < 5) {
+  const targetJobs = 20;
+  if (existingJobsCount < targetJobs) {
     console.log(`Creating dummy jobs (current: ${existingJobsCount})...`);
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < targetJobs - existingJobsCount; i++) {
       await prisma.job.create({
         data: {
           company_id: company.id,
@@ -86,13 +87,14 @@ async function main() {
   });
   console.log(`Processing ${myJobs.length} jobs for analytics...`);
 
-  // 4. Create/Get Candidates
+  // 4. Create/Get Candidates (Target 300)
   const candidateCount = await prisma.user.count({
     where: { role: UserRole.candidate },
   });
-  if (candidateCount < 20) {
-    console.log("Seeding more candidates...");
-    for (let i = 0; i < 20; i++) {
+  if (candidateCount < 300) {
+    console.log("Seeding massive candidate pool...");
+    const needed = 300 - candidateCount;
+    for (let i = 0; i < needed; i++) {
       await prisma.user.create({
         data: {
           role: UserRole.candidate,
@@ -109,10 +111,10 @@ async function main() {
     }
   }
 
-  // Fetch a pool of candidates
+  // Fetch a large pool of candidates
   const candidates = await prisma.user.findMany({
     where: { role: UserRole.candidate },
-    take: 100,
+    take: 300,
   });
 
   // 5. Generate Interactions (Swipes, Applications, Matches)
@@ -122,13 +124,16 @@ async function main() {
   let appsAdded = 0;
 
   for (const job of myJobs) {
-    // Randomly select 15-30 candidates per job
+    // Randomly select 100-250 candidates per job (High engagement)
     const viewers = faker.helpers.arrayElements(
       candidates,
-      faker.number.int({ min: 15, max: 30 }),
+      faker.number.int({ min: 100, max: 250 }),
     );
 
-    for (const candidate of viewers) {
+    console.log(`Processing Job ${job.id} with ${viewers.length} viewers...`);
+
+    // Use Promise.all for speed
+    const promises = viewers.map(async (candidate) => {
       const direction = faker.helpers.arrayElement([
         SwipeDirection.left,
         SwipeDirection.right,
@@ -136,11 +141,6 @@ async function main() {
 
       // Create Swipe (View)
       try {
-        // Determine if we need to set target_user_id (usually for recruiter swipes)
-        // For candidate swiping on job, target_user_id is typically null in many schemas,
-        // but if your schema constraint requires it or it's part of the unique key, we must handle it.
-        // Based on previous errors/schema, unique is [user_id, job_id, target_user_id]
-        // We'll trust createMany or ignore duplicates
         await prisma.swipe.create({
           data: {
             user_id: candidate.id,
@@ -149,20 +149,16 @@ async function main() {
           },
         });
         viewsAdded++;
-      } catch (e) {
-        // Ignore unique constraint violations
-      }
+      } catch (e) {}
 
       // If Right Swipe -> Application (Funnel)
-      // Generate varied statuses for the graph
       if (direction === SwipeDirection.right) {
-        // Random status with distribution
-        // 40% Pending, 25% Reviewing, 20% Interview, 10% Rejected, 5% Accepted
+        // Skewed probability for realism
         const r = Math.random();
         let status: ApplicationStatus = ApplicationStatus.pending;
-        if (r > 0.4) status = ApplicationStatus.reviewing;
-        if (r > 0.65) status = ApplicationStatus.interview;
-        if (r > 0.85) status = ApplicationStatus.rejected;
+        if (r > 0.6) status = ApplicationStatus.reviewing;
+        if (r > 0.8) status = ApplicationStatus.interview;
+        if (r > 0.9) status = ApplicationStatus.rejected;
         if (r > 0.95) status = ApplicationStatus.accepted;
 
         try {
@@ -172,12 +168,11 @@ async function main() {
               job_id: job.id,
               status: status,
               cover_note: faker.lorem.sentence(),
-              created_at: faker.date.recent({ days: 60 }),
+              created_at: faker.date.recent({ days: 90 }), // Spread over 3 months
             },
           });
           appsAdded++;
 
-          // If advanced stage, create match
           if (["interview", "accepted", "reviewing"].includes(status)) {
             await prisma.match.create({
               data: {
@@ -188,11 +183,11 @@ async function main() {
               },
             });
           }
-        } catch (e) {
-          // Ignore duplicates
-        }
+        } catch (e) {}
       }
-    }
+    });
+
+    await Promise.all(promises);
   }
 
   console.log(`✅ Analytics Seed Complete for ${targetEmail}`);
