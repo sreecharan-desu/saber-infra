@@ -66,6 +66,10 @@ export const createOrder = async (
       user_contact: "9999999999", // Should be from profile if available
     });
   } catch (err) {
+    console.error("DEBUG: createOrder failed", {
+      err,
+      env_key_id_present: !!process.env.RAZORPAY_KEY_ID,
+    });
     next(err);
   }
 };

@@ -7,6 +7,7 @@ import recruiterRoutes from "./recruiter.routes";
 import candidateRoutes from "./candidate.routes";
 import adminRoutes from "./admin.routes";
 import aiRoutes from "./ai.routes";
+import analyticsRoutes from "./analytics.routes";
 
 import paymentRoutes from "./payment.routes";
 
@@ -21,5 +22,6 @@ router.use("/candidates", candidateRoutes); // /bookmarks, /applications
 router.use("/admin", adminRoutes);
 router.use("/ai", aiRoutes);
 router.use("/payments", paymentRoutes);
+router.use("/analytics", analyticsRoutes);
 
 export default router;
