@@ -1,13 +1,27 @@
-import { PrismaClient, UserRole, SwipeDirection } from '@prisma/client';
-import { faker } from '@faker-js/faker';
+import { PrismaClient, UserRole, SwipeDirection } from "@prisma/client";
+import { faker } from "@faker-js/faker";
 
 const prisma = new PrismaClient();
 
 const TECH_STACKS = [
-  'TypeScript', 'Go', 'Rust', 'Java', 'PostgreSQL', 'Redis',
-  'Kafka', 'Docker', 'Kubernetes', 'AWS', 'GCP',
-  'GraphQL', 'gRPC', 'Next.js', 'React',
-  'Terraform', 'Prometheus', 'OpenTelemetry'
+  "TypeScript",
+  "Go",
+  "Rust",
+  "Java",
+  "PostgreSQL",
+  "Redis",
+  "Kafka",
+  "Docker",
+  "Kubernetes",
+  "AWS",
+  "GCP",
+  "GraphQL",
+  "gRPC",
+  "Next.js",
+  "React",
+  "Terraform",
+  "Prometheus",
+  "OpenTelemetry",
 ];
 
 const JOB_TEMPLATES = [
@@ -20,7 +34,7 @@ const JOB_TEMPLATES = [
       "Strong backend fundamentals, privacy-by-design thinking, and comfort with ambiguity.",
     deal_breakers:
       "Treating this as a simple CRUD or keyword-matching problem.",
-    skills: ['TypeScript', 'PostgreSQL', 'Redis', 'Distributed Systems']
+    skills: ["TypeScript", "PostgreSQL", "Redis", "Distributed Systems"],
   },
   {
     problem_statement:
@@ -31,7 +45,7 @@ const JOB_TEMPLATES = [
       "Clear understanding of write-heavy system design and trade-offs.",
     deal_breakers:
       "Inability to explain consistency or failure handling choices.",
-    skills: ['Go', 'Kafka', 'PostgreSQL', 'Kubernetes']
+    skills: ["Go", "Kafka", "PostgreSQL", "Kubernetes"],
   },
   {
     problem_statement:
@@ -40,9 +54,8 @@ const JOB_TEMPLATES = [
       "Implement incremental scoring, caching strategies, and observable performance metrics.",
     non_negotiables:
       "Experience designing read-optimized systems with predictable latency.",
-    deal_breakers:
-      "Over-engineering without measurable performance gains.",
-    skills: ['Rust', 'Redis', 'Distributed Systems']
+    deal_breakers: "Over-engineering without measurable performance gains.",
+    skills: ["Rust", "Redis", "Distributed Systems"],
   },
   {
     problem_statement:
@@ -51,73 +64,69 @@ const JOB_TEMPLATES = [
       "Define internal contracts, versioning strategy, and guardrails against data leakage.",
     non_negotiables:
       "Strong API design discipline and schema versioning experience.",
-    deal_breakers:
-      "Tight coupling between services or consumers.",
-    skills: ['TypeScript', 'GraphQL', 'PostgreSQL']
+    deal_breakers: "Tight coupling between services or consumers.",
+    skills: ["TypeScript", "GraphQL", "PostgreSQL"],
   },
   {
     problem_statement:
       "Implement observability and explainability for automated matches under partial information.",
     expectations:
       "Expose why a match happened, what signals contributed, and where uncertainty exists.",
-    non_negotiables:
-      "Ability to instrument systems beyond logs.",
-    deal_breakers:
-      "Treating explainability as a UI-only concern.",
-    skills: ['OpenTelemetry', 'Prometheus', 'Backend Systems']
-  }
+    non_negotiables: "Ability to instrument systems beyond logs.",
+    deal_breakers: "Treating explainability as a UI-only concern.",
+    skills: ["OpenTelemetry", "Prometheus", "Backend Systems"],
+  },
 ];
 
 const CANDIDATE_TEMPLATES = [
   {
     intent:
       "I want to work on backend systems where correctness, privacy, and scale matter more than surface features.",
-    why:
-      "I enjoy reasoning about trade-offs in distributed systems and making invisible decisions explicit.",
-    tech: ['Go', 'PostgreSQL', 'Redis', 'Kubernetes']
+    why: "I enjoy reasoning about trade-offs in distributed systems and making invisible decisions explicit.",
+    tech: ["Go", "PostgreSQL", "Redis", "Kubernetes"],
   },
   {
     intent:
       "Looking to solve ambiguous system design problems where requirements evolve through use.",
-    why:
-      "I am comfortable building structure where none exists yet.",
-    tech: ['TypeScript', 'Distributed Systems', 'GraphQL']
+    why: "I am comfortable building structure where none exists yet.",
+    tech: ["TypeScript", "Distributed Systems", "GraphQL"],
   },
   {
     intent:
       "Interested in designing low-latency systems with strong observability and explainability.",
-    why:
-      "I believe systems should be debuggable by design.",
-    tech: ['Rust', 'Prometheus', 'Redis']
+    why: "I believe systems should be debuggable by design.",
+    tech: ["Rust", "Prometheus", "Redis"],
   },
   {
     intent:
       "I want to build platforms used by other engineers, not just end users.",
-    why:
-      "Internal correctness compounds faster than UI polish.",
-    tech: ['Java', 'PostgreSQL', 'API Design']
+    why: "Internal correctness compounds faster than UI polish.",
+    tech: ["Java", "PostgreSQL", "API Design"],
   },
   {
     intent:
       "Focused on privacy-first architectures and minimizing early bias in automated systems.",
-    why:
-      "Bad defaults silently create bad outcomes.",
-    tech: ['Go', 'Security', 'Distributed Systems']
-  }
+    why: "Bad defaults silently create bad outcomes.",
+    tech: ["Go", "Security", "Distributed Systems"],
+  },
 ];
 
 async function main() {
-  console.log('🌱 Starting seed...');
+  console.log("🌱 Starting seed...");
 
   const existingUsers = await prisma.user.findMany({
-    include: { companies: true }
+    include: { companies: true },
   });
 
-  const existingCandidates = existingUsers.filter(u => u.role === UserRole.candidate);
-  const existingRecruiters = existingUsers.filter(u => u.role === UserRole.recruiter);
+  const existingCandidates = existingUsers.filter(
+    (u) => u.role === UserRole.candidate,
+  );
+  const existingRecruiters = existingUsers.filter(
+    (u) => u.role === UserRole.recruiter,
+  );
 
   const newRecruiters = [];
-  const allCompanies = [...existingUsers.flatMap(u => u.companies)];
+  const allCompanies = [...existingUsers.flatMap((u) => u.companies)];
 
   for (let i = 0; i < 20; i++) {
     const recruiter = await prisma.user.create({
@@ -126,8 +135,8 @@ async function main() {
         name: faker.person.fullName(),
         email: faker.internet.email(),
         photo_url: faker.image.avatar(),
-        created_at: faker.date.past()
-      }
+        created_at: faker.date.past(),
+      },
     });
     newRecruiters.push(recruiter);
 
@@ -137,8 +146,8 @@ async function main() {
         website: faker.internet.url(),
         verified: faker.datatype.boolean(0.7),
         recruiter_id: recruiter.id,
-        created_at: faker.date.past()
-      }
+        created_at: faker.date.past(),
+      },
     });
     allCompanies.push(company);
   }
@@ -156,17 +165,17 @@ async function main() {
         why_text: template.why,
         constraints_json: {
           preferred_salary: faker.number.int({ min: 120000, max: 280000 }),
-          preferred_locations: ['Remote'],
-          remote_only: true
+          preferred_locations: ["Remote"],
+          remote_only: true,
         },
         skills: {
-          create: template.tech.map(s => ({
+          create: template.tech.map((s) => ({
             name: s,
-            source: faker.helpers.arrayElement(['manual', 'github']),
-            confidence_score: faker.number.float({ min: 0.7, max: 0.95 })
-          }))
-        }
-      }
+            source: faker.helpers.arrayElement(["manual", "github"]),
+            confidence_score: faker.number.float({ min: 0.7, max: 0.95 }),
+          })),
+        },
+      },
     });
     newCandidates.push(candidate);
   }
@@ -188,10 +197,10 @@ async function main() {
           skills_required: template.skills,
           constraints_json: {
             salary_range: [120000, 250000],
-            location: 'Remote',
-            role_type: 'Problem-Based'
-          }
-        }
+            location: "Remote",
+            role_type: "Problem-Based",
+          },
+        },
       });
       allJobs.push(job);
     }
@@ -201,9 +210,15 @@ async function main() {
   let matchCount = 0;
 
   for (const candidate of allCandidates) {
-    const sampleJobs = faker.helpers.arrayElements(allJobs, faker.number.int({ min: 10, max: 20 }));
+    const sampleJobs = faker.helpers.arrayElements(
+      allJobs,
+      faker.number.int({ min: 10, max: 20 }),
+    );
     for (const job of sampleJobs) {
-      const direction = faker.helpers.arrayElement([SwipeDirection.left, SwipeDirection.right]);
+      const direction = faker.helpers.arrayElement([
+        SwipeDirection.left,
+        SwipeDirection.right,
+      ]);
 
       try {
         await prisma.swipe.create({
@@ -211,12 +226,38 @@ async function main() {
             user_id: candidate.id,
             job_id: job.id,
             direction,
-            created_at: faker.date.recent({ days: 14 })
-          }
+            created_at: faker.date.recent({ days: 14 }),
+          },
         });
         swipeCount++;
 
-        if (direction === SwipeDirection.right && faker.datatype.boolean(0.25)) {
+        // Seed Applications for Analytics
+        if (direction === SwipeDirection.right && faker.datatype.boolean(0.5)) {
+          const statuses = [
+            "pending",
+            "reviewing",
+            "interview",
+            "accepted",
+            "rejected",
+          ];
+          try {
+            await prisma.application.create({
+              data: {
+                user_id: candidate.id,
+                job_id: job.id,
+                status: faker.helpers.arrayElement(statuses) as any,
+                cover_note: faker.lorem.sentence(),
+                created_at: faker.date.recent({ days: 30 }),
+              },
+            });
+          } catch {}
+        }
+
+        // Seed Matches
+        if (
+          direction === SwipeDirection.right &&
+          faker.datatype.boolean(0.25)
+        ) {
           await prisma.match.create({
             data: {
               candidate_id: candidate.id,
@@ -224,13 +265,16 @@ async function main() {
               reveal_status: faker.datatype.boolean(0.3),
               explainability_json: {
                 score: faker.number.float({ min: 0.8, max: 0.97 }),
-                aligned_signals: faker.helpers.arrayElements(['intent', 'constraints', 'skills'], 2)
-              }
-            }
+                aligned_signals: faker.helpers.arrayElements(
+                  ["intent", "constraints", "skills"],
+                  2,
+                ),
+              },
+            },
           });
           matchCount++;
         }
-      } catch {}
+      } catch {} // Catch errors for unique constraints etc.
     }
   }
 
