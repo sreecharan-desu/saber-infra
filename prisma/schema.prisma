@@ -7,6 +7,211 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id                     String                 @id @default(uuid())
+  role                   UserRole               @default(candidate)
+  name                   String
+  email                  String                 @unique
+  photo_url              String?
+  intent_text            String?
+  why_text               String?
+  constraints_json       Json?
+  created_at             DateTime               @default(now())
+  updated_at             DateTime               @updatedAt
+  razorpay_customer_id   String?
+  subscription_tier      SubscriptionTier       @default(free_tier)
+  applications           Application[]
+  bookmarks              Bookmark[]
+  companies              Company[]
+  matches                Match[]
+  sent_messages          Message[]
+  oauth_accounts         OAuthAccount[]
+  payments               Payment[]
+  recommendation_profile RecommendationProfile?
+  skills                 Skill[]
+  swipes_received        Swipe[]                @relation("SwipesAsTarget")
+  swipes                 Swipe[]                @relation("SwipesAsActor")
+
+  @@index([role])
+  @@index([role, id])
+}
+
+model OAuthAccount {
+  id               String    @id @default(uuid())
+  user_id          String
+  provider         String
+  provider_user_id String
+  raw_data_json    Json
+  access_token     String?
+  expires_at       DateTime?
+  refresh_token    String?
+  user             User      @relation(fields: [user_id], references: [id])
+
+  @@unique([provider, provider_user_id])
+  @@index([user_id])
+}
+
+model Skill {
+  id               String @id @default(uuid())
+  user_id          String
+  name             String
+  source           String
+  confidence_score Float
+  user             User   @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
+}
+
+model Company {
+  id              String   @id @default(uuid())
+  name            String
+  website         String?
+  verified        Boolean  @default(false)
+  created_at      DateTime @default(now())
+  recruiter_id    String
+  email           String?
+  cover_image_url String?
+  logo_url        String?
+  updated_at      DateTime @updatedAt
+  recruiter       User     @relation(fields: [recruiter_id], references: [id])
+  jobs            Job[]
+
+  @@index([recruiter_id])
+}
+
+model Job {
+  id                String        @id @default(uuid())
+  company_id        String
+  problem_statement String
+  expectations      String
+  non_negotiables   String
+  deal_breakers     String
+  skills_required   String[]
+  constraints_json  Json
+  active            Boolean       @default(true)
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @updatedAt
+  applications      Application[]
+  bookmarks         Bookmark[]
+  company           Company       @relation(fields: [company_id], references: [id])
+  matches           Match[]
+  swipes            Swipe[]
+
+  @@index([company_id])
+  @@index([active, created_at])
+}
+
+model Swipe {
+  id             String         @id @default(uuid())
+  user_id        String
+  job_id         String
+  direction      SwipeDirection
+  created_at     DateTime       @default(now())
+  target_user_id String?
+  job            Job            @relation(fields: [job_id], references: [id])
+  target_user    User?          @relation("SwipesAsTarget", fields: [target_user_id], references: [id])
+  user           User           @relation("SwipesAsActor", fields: [user_id], references: [id])
+
+  @@unique([user_id, job_id, target_user_id])
+  @@index([job_id])
+  @@index([target_user_id, direction])
+  @@index([user_id, direction])
+  @@index([direction])
+}
+
+model Match {
+  id                  String    @id @default(uuid())
+  candidate_id        String
+  job_id              String
+  reveal_status       Boolean   @default(false)
+  explainability_json Json
+  created_at          DateTime  @default(now())
+  candidate           User      @relation(fields: [candidate_id], references: [id])
+  job                 Job       @relation(fields: [job_id], references: [id])
+  messages            Message[]
+
+  @@index([candidate_id])
+  @@index([job_id])
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  match_id   String
+  sender_id  String
+  content    String
+  created_at DateTime @default(now())
+  match      Match    @relation(fields: [match_id], references: [id])
+  sender     User     @relation(fields: [sender_id], references: [id])
+
+  @@index([match_id])
+  @@index([sender_id])
+}
+
+model RecommendationProfile {
+  user_id                String   @id
+  positive_signals_json  Json
+  negative_signals_json  Json
+  suppression_rules_json Json
+  last_updated           DateTime @default(now())
+  user                   User     @relation(fields: [user_id], references: [id])
+}
+
+model ApiKey {
+  id        String    @id @default(uuid())
+  keyHash   String    @unique
+  name      String?
+  isActive  Boolean   @default(true)
+  lastUsed  DateTime?
+  createdAt DateTime  @default(now())
+  revokedAt DateTime?
+}
+
+model Bookmark {
+  id         String   @id @default(uuid())
+  user_id    String
+  job_id     String
+  notes      String?
+  created_at DateTime @default(now())
+  job        Job      @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, job_id])
+  @@index([user_id])
+  @@index([job_id])
+}
+
+model Application {
+  id         String            @id @default(uuid())
+  user_id    String
+  job_id     String
+  status     ApplicationStatus @default(pending)
+  cover_note String?
+  created_at DateTime          @default(now())
+  updated_at DateTime          @updatedAt
+  job        Job               @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  user       User              @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, job_id])
+  @@index([user_id])
+  @@index([job_id, status])
+  @@index([status])
+}
+
+model Payment {
+  id                  String   @id @default(uuid())
+  user_id             String
+  amount              Float
+  currency            String
+  status              String
+  razorpay_order_id   String   @unique
+  razorpay_payment_id String?
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+  user                User     @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
+}
+
 enum UserRole {
   candidate
   recruiter
@@ -24,182 +229,6 @@ enum SwipeDirection {
   right
 }
 
-model User {
-  id              String   @id @default(uuid())
-  role            UserRole @default(candidate)
-  name            String
-  email           String   @unique
-  photo_url       String?
-  intent_text     String?
-  why_text        String?
-  constraints_json Json?
-  
-  subscription_tier SubscriptionTier @default(free_tier)
-  razorpay_customer_id String?
-  
-  payments        Payment[]
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
-
-  oauth_accounts  OAuthAccount[]
-  skills          Skill[]
-  swipes          Swipe[]  @relation("SwipesAsActor")
-  swipes_received Swipe[]  @relation("SwipesAsTarget")
-  matches         Match[]
-  sent_messages   Message[]
-  recommendation_profile RecommendationProfile?
-  bookmarks       Bookmark[]
-  applications    Application[]
-  
-  // Implicit relation to companies managed by this recruiter
-  companies       Company[]
-
-  @@index([role])
-  @@index([role, id]) // Optimization for candidate feed fetching
-}
-
-model OAuthAccount {
-  id                String   @id @default(uuid())
-  user_id           String
-  provider          String
-  provider_user_id  String
-  access_token      String?  @db.Text
-  refresh_token     String?  @db.Text
-  expires_at        DateTime?
-  raw_data_json     Json
-  user              User     @relation(fields: [user_id], references: [id])
-
-  @@unique([provider, provider_user_id])
-  @@index([user_id])
-}
-
-model Skill {
-  id                String   @id @default(uuid())
-  user_id           String
-  name              String
-  source            String
-  confidence_score  Float
-  user              User     @relation(fields: [user_id], references: [id])
-
-  @@index([user_id])
-}
-
-model Company {
-  id          String   @id @default(uuid())
-  name        String
-  website     String?
-  email       String?
-  logo_url    String?
-  cover_image_url String?
-  verified    Boolean  @default(false)
-  created_at  DateTime @default(now())
-  
-  // Link to recruiter who owns/manages this company profile
-  recruiter_id String
-  recruiter    User   @relation(fields: [recruiter_id], references: [id])
-
-  jobs        Job[]
-
-  updated_at  DateTime @updatedAt
-
-  @@index([recruiter_id])
-}
-
-model Job {
-  id                String   @id @default(uuid())
-  company_id        String
-  problem_statement String
-  expectations      String
-  non_negotiables   String
-  deal_breakers     String
-  skills_required   String[]
-  constraints_json  Json
-  active            Boolean  @default(true)
-  created_at        DateTime @default(now())
-
-  company           Company  @relation(fields: [company_id], references: [id])
-  swipes            Swipe[]
-  matches           Match[]
-  bookmarks         Bookmark[]
-  applications      Application[]
-
-  updated_at        DateTime @updatedAt
-
-  @@index([company_id])
-  @@index([active, created_at]) // Optimized: Feed usually queries active jobs ordered by date
-}
-
-model Swipe {
-  id          String         @id @default(uuid())
-  user_id     String
-  job_id      String
-  direction   SwipeDirection
-  created_at  DateTime       @default(now())
-
-  user        User           @relation("SwipesAsActor", fields: [user_id], references: [id])
-  job         Job            @relation(fields: [job_id], references: [id])
-  
-  // For recruiter swipes: target is the candidate. For candidate swipes: null.
-  target_user_id String?
-  target_user    User?          @relation("SwipesAsTarget", fields: [target_user_id], references: [id])
-
-  @@unique([user_id, job_id, target_user_id])
-  @@index([job_id])
-  @@index([target_user_id, direction]) // Optimized: Check if I was swiped right by someone
-  @@index([user_id, direction])
-  @@index([direction])
-}
-
-model Match {
-  id                  String   @id @default(uuid())
-  candidate_id        String
-  job_id              String
-  reveal_status       Boolean  @default(false)
-  explainability_json Json
-  created_at          DateTime @default(now())
-
-  candidate           User     @relation(fields: [candidate_id], references: [id])
-  job                 Job      @relation(fields: [job_id], references: [id])
-  messages            Message[]
-
-  @@index([candidate_id])
-  @@index([job_id])
-}
-
-model Message {
-  id          String   @id @default(uuid())
-  match_id    String
-  sender_id   String
-  content     String
-  created_at  DateTime @default(now())
-
-  match       Match    @relation(fields: [match_id], references: [id])
-  sender      User     @relation(fields: [sender_id], references: [id])
-
-  @@index([match_id])
-  @@index([sender_id])
-}
-
-model RecommendationProfile {
-  user_id               String   @id
-  positive_signals_json Json
-  negative_signals_json Json
-  suppression_rules_json Json
-  last_updated          DateTime @default(now())
-
-  user                  User     @relation(fields: [user_id], references: [id])
-}
-
-model ApiKey {
-  id        String   @id @default(uuid())
-  keyHash   String   @unique
-  name      String?
-  isActive  Boolean  @default(true)
-  lastUsed  DateTime?
-  createdAt DateTime @default(now())
-  revokedAt DateTime?
-}
-
 enum ApplicationStatus {
   pending
   reviewing
@@ -207,53 +236,4 @@ enum ApplicationStatus {
   accepted
   rejected
   withdrawn
-}
-
-model Bookmark {
-  id         String   @id @default(uuid())
-  user_id    String
-  job_id     String
-  notes      String?
-  created_at DateTime @default(now())
-
-  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  job        Job      @relation(fields: [job_id], references: [id], onDelete: Cascade)
-
-  @@unique([user_id, job_id])
-  @@index([user_id])
-  @@index([job_id])
-}
-
-model Application {
-  id         String            @id @default(uuid())
-  user_id    String
-  job_id     String
-  status     ApplicationStatus @default(pending)
-  cover_note String?
-  created_at DateTime          @default(now())
-  updated_at DateTime          @updatedAt
-
-  user       User              @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  job        Job               @relation(fields: [job_id], references: [id], onDelete: Cascade)
-
-  @@unique([user_id, job_id])
-  @@index([user_id])
-  @@index([job_id, status]) // Optimized: Frequent filtering by job and status
-  @@index([status])
-}
-
-model Payment {
-  id                  String   @id @default(uuid())
-  user_id             String
-  amount              Float
-  currency            String
-  status              String   // created, authorized, captured, failed
-  razorpay_order_id   String   @unique
-  razorpay_payment_id String?
-  created_at          DateTime @default(now())
-  updated_at          DateTime @updatedAt
-
-  user                User     @relation(fields: [user_id], references: [id])
-
-  @@index([user_id])
 }

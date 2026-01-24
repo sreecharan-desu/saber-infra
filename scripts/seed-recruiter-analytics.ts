@@ -55,35 +55,49 @@ async function main() {
     });
   }
 
-  // 3. Create active jobs (Ensure at least 20)
-  const existingJobsCount = await prisma.job.count({
-    where: { company_id: company.id },
-  });
-  const targetJobs = 20;
-  if (existingJobsCount < targetJobs) {
-    console.log(`Creating dummy jobs (current: ${existingJobsCount})...`);
-    for (let i = 0; i < targetJobs - existingJobsCount; i++) {
-      await prisma.job.create({
-        data: {
-          company_id: company.id,
-          problem_statement: faker.hacker.phrase(),
-          expectations: faker.lorem.paragraph(),
-          non_negotiables: faker.lorem.sentence(),
-          deal_breakers: faker.lorem.sentence(),
-          skills_required: [faker.hacker.noun(), faker.hacker.noun()],
-          constraints_json: {},
-          active: true,
-        },
-      });
-    }
+  // 3. Cleanup Existing Data for this Recruiter (Idempontency)
+  console.log("Cleaning up existing jobs/interactions for this recruiter...");
+  const existingJobIds = (
+    await prisma.job.findMany({
+      where: { company_id: company.id },
+      select: { id: true },
+    })
+  ).map((j) => j.id);
+
+  if (existingJobIds.length > 0) {
+    await prisma.match.deleteMany({
+      where: { job_id: { in: existingJobIds } },
+    });
+    await prisma.application.deleteMany({
+      where: { job_id: { in: existingJobIds } },
+    });
+    await prisma.swipe.deleteMany({
+      where: { job_id: { in: existingJobIds } },
+    });
+    await prisma.job.deleteMany({ where: { id: { in: existingJobIds } } });
   }
 
+  // 4. Create active jobs (Target 20)
+  console.log(`Creating 20 fresh jobs...`);
+  const jobsData = [];
+  for (let i = 0; i < 20; i++) {
+    jobsData.push({
+      company_id: company.id,
+      problem_statement: faker.hacker.phrase(),
+      expectations: faker.lorem.paragraph(),
+      non_negotiables: faker.lorem.sentence(),
+      deal_breakers: faker.lorem.sentence(),
+      skills_required: [faker.hacker.noun(), faker.hacker.noun()],
+      constraints_json: {},
+      active: true,
+    });
+  }
+  await prisma.job.createMany({ data: jobsData });
   const myJobs = await prisma.job.findMany({
     where: { company_id: company.id },
   });
-  console.log(`Processing ${myJobs.length} jobs for analytics...`);
 
-  // 4. Create/Get Candidates (Target 300)
+  // 5. Create/Get Candidates (Target 300)
   const candidateCount = await prisma.user.count({
     where: { role: UserRole.candidate },
   });
@@ -106,89 +120,73 @@ async function main() {
       });
     }
   }
-
-  // Fetch a large pool of candidates
   const candidates = await prisma.user.findMany({
     where: { role: UserRole.candidate },
     take: 300,
   });
 
-  // 5. Generate Interactions (Swipes, Applications, Matches)
-  console.log("Generating interactions (Views, Applications, Pipeline)...");
-
+  // 6. Generate Interactions using createMany
+  console.log("Generating interactions (Batch Processing)...");
   let viewsAdded = 0;
   let appsAdded = 0;
+  let matchesAdded = 0;
 
   for (const job of myJobs) {
-    // Randomly select 100-250 candidates per job (High engagement)
     const viewers = faker.helpers.arrayElements(
       candidates,
-      faker.number.int({ min: 100, max: 250 }),
+      faker.number.int({ min: 50, max: 150 }),
     );
+    const swipes = [];
+    const apps = [];
+    const matches = [];
 
-    console.log(`Processing Job ${job.id} with ${viewers.length} viewers...`);
-
-    // Use Promise.all for speed
-    const promises = viewers.map(async (candidate) => {
+    for (const candidate of viewers) {
       const direction = faker.helpers.arrayElement([
         SwipeDirection.left,
         SwipeDirection.right,
       ]);
+      swipes.push({ user_id: candidate.id, job_id: job.id, direction });
 
-      // Create Swipe (View)
-      try {
-        await prisma.swipe.create({
-          data: {
-            user_id: candidate.id,
-            job_id: job.id,
-            direction,
-          },
-        });
-        viewsAdded++;
-      } catch (e) {}
-
-      // If Right Swipe -> Application (Funnel)
       if (direction === SwipeDirection.right) {
-        // Skewed probability for realism
         const r = Math.random();
         let status: ApplicationStatus = ApplicationStatus.pending;
         if (r > 0.6) status = ApplicationStatus.reviewing;
         if (r > 0.8) status = ApplicationStatus.interview;
-        if (r > 0.9) status = ApplicationStatus.rejected;
         if (r > 0.95) status = ApplicationStatus.accepted;
 
-        try {
-          await prisma.application.create({
-            data: {
-              user_id: candidate.id,
-              job_id: job.id,
-              status: status,
-              cover_note: faker.lorem.sentence(),
-              created_at: faker.date.recent({ days: 90 }), // Spread over 3 months
-            },
+        apps.push({
+          user_id: candidate.id,
+          job_id: job.id,
+          status,
+          cover_note: faker.lorem.sentence(),
+          created_at: faker.date.recent({ days: 90 }),
+        });
+
+        if (["interview", "accepted", "reviewing"].includes(status)) {
+          matches.push({
+            candidate_id: candidate.id,
+            job_id: job.id,
+            reveal_status: true,
+            explainability_json: { score: 0.85 },
           });
-          appsAdded++;
-
-          if (["interview", "accepted", "reviewing"].includes(status)) {
-            await prisma.match.create({
-              data: {
-                candidate_id: candidate.id,
-                job_id: job.id,
-                reveal_status: true,
-                explainability_json: {},
-              },
-            });
-          }
-        } catch (e) {}
+        }
       }
-    });
+    }
 
-    await Promise.all(promises);
+    await prisma.swipe.createMany({ data: swipes, skipDuplicates: true });
+    await prisma.application.createMany({ data: apps, skipDuplicates: true });
+    await prisma.match.createMany({ data: matches, skipDuplicates: true });
+
+    viewsAdded += swipes.length;
+    appsAdded += apps.length;
+    matchesAdded += matches.length;
+    console.log(`- Job ${job.id}: ${swipes.length} views, ${apps.length} apps`);
   }
 
   console.log(`✅ Analytics Seed Complete for ${targetEmail}`);
-  console.log(`   - Views (Swipes) Generated: ~${viewsAdded}`);
-  console.log(`   - Applications Generated: ~${appsAdded}`);
+  console.log(
+    `   - Views: ${viewsAdded} | Apps: ${appsAdded} | Matches: ${matchesAdded}`,
+  );
 }
 
 main()
